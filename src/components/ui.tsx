@@ -30,7 +30,7 @@ export const input =
 
 export function AnimeTile({ anime, caption }: { anime: Anime; caption?: ReactNode }) {
   return (
-    <Link href={`/anime/${anime.id}`} className="block" aria-label={anime.title}>
+    <Link href={`/anime/${anime.id}`} className="poster-link" aria-label={anime.title}>
       <Poster anime={anime} />
       {caption && <div className="mt-1.5 text-xs text-muted">{caption}</div>}
     </Link>

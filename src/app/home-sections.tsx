@@ -21,10 +21,10 @@ export function CoverMarquee({ snap, catalog }: Props) {
     .filter((a): a is Anime => a !== null);
   if (items.length < 6) return null;
   return (
-    <div className="marquee -mx-4 mb-2 overflow-hidden px-4 py-2" aria-label={t.community.trendingTitle}>
+    <div className="marquee -mx-4 mb-2 overflow-hidden px-4 py-4" aria-label={t.community.trendingTitle}>
       <div className="marquee-track">
         {[...items, ...items].map((a, i) => (
-          <Link key={`${a.id}-${i}`} href={`/anime/${a.id}`} className="block w-24 flex-none sm:w-28" tabIndex={i >= items.length ? -1 : 0} aria-label={a.title} aria-hidden={i >= items.length}>
+          <Link key={`${a.id}-${i}`} href={`/anime/${a.id}`} className="poster-link w-24 flex-none sm:w-28" tabIndex={i >= items.length ? -1 : 0} aria-label={a.title} aria-hidden={i >= items.length}>
             <Poster anime={a} />
           </Link>
         ))}
@@ -54,7 +54,7 @@ export function TrendingSection({ snap, catalog }: Props) {
       {stats.length === 0 ? (
         <Muted>{tab === "friends" ? t.community.friendsEmpty : t.community.empty}</Muted>
       ) : (
-        <div className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-3">
+        <div className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pt-3 pb-3">
           {stats.map((s) => {
             const a = catalog.get(s.animeId);
             if (!a) return null;

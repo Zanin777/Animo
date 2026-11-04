@@ -58,8 +58,8 @@ export function Genres({ anime }: { anime: Anime }) {
 /** Card do "Em alta": capa, nome, nota média, gêneros, nº de avaliações. */
 export function TrendingCard({ anime, stat, extra }: { anime: Anime; stat: AnimeStat; extra?: ReactNode }) {
   return (
-    <Link href={`/anime/${anime.id}`} className="block w-36 flex-none snap-start sm:w-40" aria-label={anime.title}>
-      <div className="relative">
+    <Link href={`/anime/${anime.id}`} className="poster-link w-36 flex-none snap-start sm:w-40" aria-label={anime.title}>
+      <div className="poster-lift relative">
         <Poster anime={anime} />
         {stat.avgHalf !== null && (
           <span className="absolute -right-1.5 -bottom-2 z-10 rounded-full bg-bg">

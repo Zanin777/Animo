@@ -30,6 +30,53 @@ body {
 .hanko-sm { --s: 32px; }
 .hanko-lg { --s: 72px; }
 
+/* destaque do pôster ao passar o cursor (ou focar pelo teclado).
+   .poster-link = o link; o filho direto (.poster ou .poster-lift) é o que cresce. */
+.poster-link {
+  display: block;
+  position: relative;
+  outline: none;
+}
+.poster-link > .poster,
+.poster-link > .poster-lift {
+  transition:
+    transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 260ms ease,
+    opacity 260ms ease;
+}
+.poster-lift {
+  border-radius: 8px;
+}
+@media (hover: hover) {
+  .poster-link:hover {
+    z-index: 5;
+  }
+  .poster-link:hover > .poster,
+  .poster-link:hover > .poster-lift {
+    transform: translateY(-4px) scale(1.07);
+    box-shadow:
+      0 0 0 2px var(--accent),
+      0 18px 36px -12px rgba(0, 0, 0, 0.6);
+  }
+}
+.poster-link:focus-visible {
+  z-index: 5;
+}
+.poster-link:focus-visible > .poster,
+.poster-link:focus-visible > .poster-lift {
+  transform: translateY(-4px) scale(1.07);
+  box-shadow:
+    0 0 0 2px var(--accent),
+    0 18px 36px -12px rgba(0, 0, 0, 0.6);
+}
+@media (prefers-reduced-motion: reduce) {
+  .poster-link > .poster,
+  .poster-link > .poster-lift {
+    transition: box-shadow 120ms ease;
+    transform: none !important;
+  }
+}
+
 /* faixa de capas passando no topo do Início */
 .marquee {
   mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
@@ -43,6 +90,12 @@ body {
 .marquee:hover .marquee-track,
 .marquee:focus-within .marquee-track {
   animation-play-state: paused;
+}
+/* na faixa, os outros escurecem para o pôster em foco se destacar */
+@media (hover: hover) {
+  .marquee-track:has(.poster-link:hover) .poster-link:not(:hover) > .poster {
+    opacity: 0.45;
+  }
 }
 @keyframes marquee {
   to { transform: translateX(calc(-50% - 6px)); }

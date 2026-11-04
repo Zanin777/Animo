@@ -40,10 +40,10 @@ export function HomeView() {
       {watching.length > 0 && (
         <>
           <SectionTitle>{t.home.watchingTitle}</SectionTitle>
-          <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2">
+          <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pt-3 pb-2">
             {watching.map(({ item, anime }) => (
               <div key={item.animeId} className="w-32 flex-none snap-start">
-                <Link href={`/anime/${anime!.id}`} aria-label={anime!.title}>
+                <Link href={`/anime/${anime!.id}`} aria-label={anime!.title} className="poster-link">
                   <Poster anime={anime!} />
                 </Link>
                 <div className="mt-2 flex items-center justify-between gap-1">
