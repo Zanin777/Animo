@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cour — referência visual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  /* Direção de arte APROVADA em 2026-11-04 — manter exatamente assim.
+     Mesmos valores de src/app/tokens.css. Esta página é a referência visual do projeto. */
+  :root {
+    --crimson: #c41e3a; --crimson-ink: #9e1830;
+    --paper: #f7f4ee; --ink: #1a1717; --muted: #6b6461; --line: #e3ddd3; --card: #fffdf9;
+    --bg: var(--paper); --fg: var(--ink); --accent: var(--crimson);
+    --display: "Dela Gothic One", system-ui, sans-serif;
+    --sans: "Zen Kaku Gothic New", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg:#121011; --fg:#f1ece4; --muted:#a39b95; --line:#2a2526; --card:#1b1819; --accent:#e0334f; }
+  }
+  :root[data-theme="dark"] { --bg:#121011; --fg:#f1ece4; --muted:#a39b95; --line:#2a2526; --card:#1b1819; --accent:#e0334f; }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--sans); line-height: 1.55; }
+  main { max-width: 960px; margin: 0 auto; padding: 32px 16px 120px; }
+  h1, h2 { font-family: var(--display); font-weight: 400; letter-spacing: .01em; }
+  h1 { font-size: clamp(40px, 8vw, 72px); margin: 0; line-height: 1; }
+  h1 .dot { color: var(--accent); }
+  h2 { font-size: 20px; margin: 56px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+  .lede { color: var(--muted); max-width: 52ch; margin: 12px 0 0; }
+  .muted { color: var(--muted); font-size: 14px; }
+
+  .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+  .sw { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--card); }
+  .sw div { height: 64px; }
+  .sw p { margin: 0; padding: 8px 10px; font-size: 13px; }
+  .sw code { color: var(--muted); }
+
+  .type-display { font-family: var(--display); font-size: 36px; line-height: 1.1; margin: 0 0 8px; }
+  .type-body { max-width: 60ch; margin: 0; }
+
+  /* pôster tipográfico */
+  .posters { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 14px; }
+  .poster {
+    aspect-ratio: 2 / 3; border-radius: 8px; padding: 12px; position: relative; overflow: hidden;
+    display: flex; flex-direction: column; justify-content: space-between;
+    box-shadow: 0 1px 0 rgba(0,0,0,.06), 0 6px 18px -10px rgba(0,0,0,.35);
+  }
+  .poster .t { font-family: var(--display); line-height: 1.05; word-break: break-word; position: relative; z-index: 1; }
+  .poster .meta { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; opacity: .75; position: relative; z-index: 1; display: flex; justify-content: space-between; }
+  .poster .mark { position: absolute; right: -14%; bottom: 12%; width: 70%; aspect-ratio: 1; border-radius: 50%; opacity: .9; }
+  .poster .rule { position: absolute; left: 12px; right: 12px; top: 50%; height: 1px; opacity: .35; }
+
+  /* selo hanko */
+  .hanko {
+    --s: 44px; width: var(--s); height: var(--s); border-radius: 50%;
+    border: 2px solid var(--accent); color: var(--accent);
+    display: inline-grid; place-items: center; transform: rotate(-8deg);
+    font-family: var(--display); font-size: calc(var(--s) * .36);
+    background: color-mix(in srgb, var(--accent) 7%, transparent);
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+  .hanko.lg { --s: 72px; }
+  .hanko.sq { border-radius: 6px; }
+  .hankos { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+
+  /* registro do diário */
+  .entry { display: grid; grid-template-columns: 64px 1fr auto; gap: 14px; align-items: center;
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+  .entry + .entry { margin-top: 10px; }
+  .entry .poster { padding: 6px; border-radius: 5px; box-shadow: none; }
+  .entry .poster .t { font-size: 9px; }
+  .entry .poster .meta { display: none; }
+  .entry h3 { margin: 0; font-size: 16px; font-weight: 700; }
+  .entry p { margin: 2px 0 0; }
+  .tag { display: inline-block; font-size: 11px; padding: 1px 8px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); margin-left: 6px; vertical-align: 2px; }
+
+  /* registrar em 3 toques */
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .step { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+  .step b { font-family: var(--display); font-weight: 400; color: var(--accent); margin-right: 6px; }
+  .stars { display: flex; gap: 2px; margin-top: 10px; font-size: 22px; color: var(--line); }
+  .stars .on { color: var(--accent); }
+  .btn { display: inline-block; margin-top: 10px; background: var(--accent); color: #fff; border: 0; border-radius: 99px; padding: 8px 16px; font: 700 14px var(--sans); }
+  .chips { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+  .chip { border: 1px solid var(--line); border-radius: 99px; padding: 4px 10px; font-size: 13px; }
+  .chip.on { border-color: var(--accent); color: var(--accent); }
+
+  /* barra inferior (celular) */
+  .tabbar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--card); border-top: 1px solid var(--line);
+    display: flex; justify-content: space-around; padding: 8px 0 calc(8px + env(safe-area-inset-bottom)); font-size: 12px; }
+  .tabbar span { display: grid; justify-items: center; gap: 2px; color: var(--muted); }
+  .tabbar span.on { color: var(--accent); font-weight: 700; }
+  .tabbar i { font-style: normal; font-size: 18px; }
+  .tabbar .log i { width: 34px; height: 34px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; margin-top: -14px; }
+  @media (min-width: 768px) { .tabbar { display: none; } main { padding-bottom: 48px; } }
+
+  .toggle { position: fixed; top: 12px; right: 12px; border: 1px solid var(--line); background: var(--card); color: var(--fg); border-radius: 99px; padding: 6px 12px; font: 13px var(--sans); cursor: pointer; }
+</style>
+</head>
+<body>
+<button class="toggle" id="toggle">claro / escuro</button>
+<main>
+  <h1>cour<span class="dot">.</span></h1>
+  <p class="lede">Diário de anime. Referência visual do MVP: minimalista, papel e tinta, com o vermelho do selo hanko como único destaque.</p>
+
+  <h2>Cores</h2>
+  <div class="swatches">
+    <div class="sw"><div style="background:#c41e3a"></div><p>Carmesim<br><code>#c41e3a</code></p></div>
+    <div class="sw"><div style="background:#9e1830"></div><p>Carmesim tinta<br><code>#9e1830</code></p></div>
+    <div class="sw"><div style="background:#f7f4ee"></div><p>Papel<br><code>#f7f4ee</code></p></div>
+    <div class="sw"><div style="background:#1a1717"></div><p>Tinta<br><code>#1a1717</code></p></div>
+    <div class="sw"><div style="background:#6b6461"></div><p>Tinta suave<br><code>#6b6461</code></p></div>
+    <div class="sw"><div style="background:#e3ddd3"></div><p>Linha<br><code>#e3ddd3</code></p></div>
+  </div>
+  <p class="muted">Regra: o carmesim aparece só em nota, ação principal e item ativo. O resto é papel e tinta.</p>
+
+  <h2>Tipografia</h2>
+  <p class="type-display">Dela Gothic One</p>
+  <p class="type-body">Zen Kaku Gothic New para todo o texto corrido: reviews, listas, perfil. Dela Gothic One só em títulos, no logotipo, no selo e nos pôsteres.</p>
+
+  <h2>Pôsteres tipográficos</h2>
+  <p class="muted">Gerados a partir do título, sem imagem de terceiros. O mesmo título sempre gera o mesmo pôster.</p>
+  <div class="posters" id="posters"></div>
+
+  <h2>Selo hanko (nota)</h2>
+  <div class="hankos">
+    <span class="hanko lg">4,5</span>
+    <span class="hanko">5</span>
+    <span class="hanko">3,5</span>
+    <span class="hanko sq">0,5</span>
+    <span class="muted">Nota de 0,5 a 5, carimbada com uma leve rotação.</span>
+  </div>
+
+  <h2>Registro no diário</h2>
+  <div id="entries"></div>
+
+  <h2>Registrar em 3 toques</h2>
+  <div class="steps">
+    <div class="step"><b>1</b>Buscar e tocar no anime
+      <div class="chips"><span class="chip on">Frieren</span><span class="chip">Mob Psycho 100</span></div></div>
+    <div class="step"><b>2</b>Tocar na nota
+      <div class="stars"><span class="on">★</span><span class="on">★</span><span class="on">★</span><span class="on">★</span><span>★</span></div></div>
+    <div class="step"><b>3</b>Salvar. Review, data e "revi" são opcionais.
+      <div><span class="btn">Registrar</span></div></div>
+  </div>
+</main>
+
+<nav class="tabbar">
+  <span class="on"><i>⌂</i>Início</span>
+  <span><i>⌕</i>Buscar</span>
+  <span class="log"><i>+</i>Registrar</span>
+  <span><i>☰</i>Listas</span>
+  <span><i>◯</i>Perfil</span>
+</nav>
+
+<script>
+  // Mesma lógica que vai virar o componente <Poster title year /> no app.
+  const PALETTES = [
+    { bg: "#1a1717", fg: "#f7f4ee", mark: "#c41e3a" },
+    { bg: "#c41e3a", fg: "#fffdf9", mark: "#1a1717" },
+    { bg: "#f1ebe0", fg: "#1a1717", mark: "#c41e3a" },
+    { bg: "#24304a", fg: "#f1ece4", mark: "#e6b450" },
+    { bg: "#2f4a3a", fg: "#f1ece4", mark: "#f1ece4" },
+    { bg: "#e6b450", fg: "#1a1717", mark: "#fffdf9" },
+  ];
+  function hash(s) { let h = 2166136261; for (const c of s) { h ^= c.codePointAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function poster(title, year, kind = "TV") {
+    const h = hash(title), p = PALETTES[h % PALETTES.length], variant = (h >> 4) % 3;
+    const el = document.createElement("div");
+    el.className = "poster";
+    el.style.background = p.bg; el.style.color = p.fg;
+    const size = title.length > 22 ? 15 : title.length > 12 ? 19 : 24;
+    const deco = variant === 0 ? `<div class="mark" style="background:${p.mark}"></div>`
+               : variant === 1 ? `<div class="rule" style="background:${p.fg}"></div>` : "";
+    el.innerHTML = `${deco}<div class="t" style="font-size:${size}px">${title}</div><div class="meta"><span>${year}</span><span>${kind}</span></div>`;
+    return el;
+  }
+  const titles = [
+    ["Sousou no Frieren", 2023], ["Mob Psycho 100", 2016], ["Cowboy Bebop", 1998, "TV"],
+    ["Mononoke", 2007], ["Ping Pong the Animation", 2014], ["Kimi no Na wa.", 2016, "Filme"],
+    ["Odd Taxi", 2021], ["Dungeon Meshi", 2024],
+  ];
+  const grid = document.getElementById("posters");
+  titles.forEach(([t, y, k]) => grid.append(poster(t, y, k)));
+
+  const entries = [
+    { t: "Sousou no Frieren", y: 2023, n: "4,5", d: "2 nov", r: false, txt: "Lento do jeito certo." },
+    { t: "Cowboy Bebop", y: 1998, n: "5", d: "28 out", r: true, txt: "" },
+  ];
+  const list = document.getElementById("entries");
+  entries.forEach(e => {
+    const row = document.createElement("div");
+    row.className = "entry";
+    row.append(poster(e.t, e.y));
+    row.insertAdjacentHTML("beforeend",
+      `<div><h3>${e.t}${e.r ? '<span class="tag">revi</span>' : ""}</h3><p class="muted">${e.d}${e.txt ? " · " + e.txt : ""}</p></div><span class="hanko">${e.n}</span>`);
+    list.append(row);
+  });
+
+  document.getElementById("toggle").onclick = () => {
+    const r = document.documentElement;
+    const dark = r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    r.dataset.theme = dark ? "light" : "dark";
+  };
+</script>
+</body>
+</html>

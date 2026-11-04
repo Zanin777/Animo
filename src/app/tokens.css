@@ -1,0 +1,41 @@
+/* Cour — design tokens (Tailwind v4, importar em globals.css depois de `@import "tailwindcss";`)
+   Fonte da verdade visual. A página docs/estilo.html mostra estes valores em uso
+   (substitui o protótipo cour/index.html, que foi perdido). Mudou aqui, muda lá. */
+
+@theme {
+  --font-display: "Dela Gothic One", system-ui, sans-serif;   /* títulos, pôsteres tipográficos */
+  --font-sans: "Zen Kaku Gothic New", system-ui, sans-serif;  /* texto corrido */
+
+  --color-crimson: #c41e3a;        /* destaque, selo hanko */
+  --color-crimson-ink: #9e1830;    /* hover / texto sobre fundo claro */
+  --color-paper: #f7f4ee;          /* fundo claro (papel washi) */
+  --color-ink: #1a1717;            /* texto principal */
+  --color-ink-muted: #6b6461;
+  --color-line: #e3ddd3;
+
+  --radius-card: 0.75rem;
+}
+
+:root {
+  --bg: var(--color-paper);
+  --fg: var(--color-ink);
+  --muted: var(--color-ink-muted);
+  --line: var(--color-line);
+  --accent: var(--color-crimson);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121011;
+    --fg: #f1ece4;
+    --muted: #a39b95;
+    --line: #2a2526;
+    --accent: #e0334f;
+  }
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+}
