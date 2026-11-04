@@ -2,7 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { MouseEvent } from "react";
 import { t } from "@/messages";
+import { openLog } from "./LogDrawer";
+
+/** O + abre a gaveta; o href continua como reserva (abrir em nova aba, sem JS). */
+function onLogClick(e: MouseEvent) {
+  if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+  e.preventDefault();
+  openLog();
+}
 
 const ITEMS = [
   { href: "/", label: t.nav.home, icon: "⌂" },
@@ -37,6 +46,7 @@ export function NavShell({ path }: { path: string | null }) {
               <Link
                 key={it.href}
                 href={it.href}
+                onClick={onLogClick}
                 className="rounded-full bg-accent px-4 py-1.5 text-sm font-bold text-white hover:bg-accent-ink"
               >
                 {it.label}
@@ -66,6 +76,7 @@ export function NavShell({ path }: { path: string | null }) {
             <Link
               key={it.href}
               href={it.href}
+              onClick={"primary" in it ? onLogClick : undefined}
               aria-current={active ? "page" : undefined}
               className={`grid justify-items-center gap-0.5 ${active ? "font-bold text-accent" : "text-muted"}`}
             >

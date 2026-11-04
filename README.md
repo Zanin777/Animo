@@ -18,6 +18,13 @@ npm run lint
 - **Dados só no navegador** (localStorage, `src/lib/diary/store.ts`). Sem contas ainda.
 - Banco e segurança (Supabase + RLS) vêm depois: o schema já está em `supabase/migrations/0001_core.sql`.
 
+## Créditos de terceiros
+
+- Catálogo: [anime-offline-database](https://github.com/manami-project/anime-offline-database), ODbL 1.0 + DbCL 1.0 (ver `docs/catalogo.md`)
+- Capas: [TMDB](https://www.themoviedb.org), uso não comercial. Este produto usa a API do TMDB, mas não é endossado nem certificado pelo TMDB.
+- `src/components/SlidingNumber.tsx`: adaptado do [Motion Primitives](https://github.com/ibelick/motion-primitives), MIT (`third-party/motion-primitives.LICENSE.md`)
+- Gaveta de registro: [vaul](https://github.com/emilkowalski/vaul), MIT (dependência npm)
+
 ## Mapa
 
 | Onde | O quê |

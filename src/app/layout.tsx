@@ -3,6 +3,7 @@ import { Dela_Gothic_One, Zen_Kaku_Gothic_New } from "next/font/google";
 import { Suspense } from "react";
 import { AppNav, NavShell } from "@/components/AppNav";
 import { InlineScript } from "@/components/InlineScript";
+import { LogDrawer } from "@/components/LogDrawer";
 import { themeBootScript } from "@/lib/theme";
 import { t } from "@/messages";
 import "./globals.css";
@@ -42,6 +43,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <AppNav />
         </Suspense>
         <main className="mx-auto w-full max-w-3xl px-4 pt-6 pb-28 md:pb-12">{children}</main>
+        <LogDrawer />
       </body>
     </html>
   );

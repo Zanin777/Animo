@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { SlidingNumber } from "@/components/SlidingNumber";
 import { ThemeSwitch } from "@/components/ThemeSwitch";
 import { AnimeTile, Muted, PageTitle, PosterGrid, SectionTitle, card } from "@/components/ui";
 import { useCatalog } from "@/lib/catalog/local";
@@ -46,10 +47,13 @@ export function ProfileView() {
 
       <SectionTitle>{t.profile.stats}</SectionTitle>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat value={stats.watched} label={t.profile.statWatched} />
-        <Stat value={stats.entries} label={t.profile.statEntries} />
-        <Stat value={stats.thisYear} label={t.profile.statThisYear} />
-        <Stat value={stats.avgHalf === null ? "–" : formatRating(Math.round(stats.avgHalf * 10) / 10)} label={t.profile.statAvg} />
+        <Stat value={<SlidingNumber value={stats.watched} />} label={t.profile.statWatched} />
+        <Stat value={<SlidingNumber value={stats.entries} />} label={t.profile.statEntries} />
+        <Stat value={<SlidingNumber value={stats.thisYear} />} label={t.profile.statThisYear} />
+        <Stat
+          value={stats.avgHalf === null ? "–" : <SlidingNumber value={stats.avgHalf / 2} decimals={1} />}
+          label={t.profile.statAvg}
+        />
       </div>
 
       <div className={`${card} mt-3 p-4`}>
@@ -98,7 +102,7 @@ export function ProfileView() {
   );
 }
 
-function Stat({ value, label }: { value: number | string; label: string }) {
+function Stat({ value, label }: { value: React.ReactNode; label: string }) {
   return (
     <div className={`${card} p-4`}>
       <div className="font-display text-3xl leading-none">{value}</div>

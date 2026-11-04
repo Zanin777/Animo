@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useParams } from "next/navigation";
+import { openLog } from "@/components/LogDrawer";
 import { useState } from "react";
 import { EntryRow } from "@/components/EntryRow";
 import { Poster } from "@/components/Poster";
@@ -44,9 +44,9 @@ export function AnimeView() {
           {!anime.isVerified && <p className="mt-1 text-xs text-muted">{t.search.userCreated}</p>}
 
           <div className="mt-5 flex flex-wrap gap-2">
-            <Link href={`/registrar?anime=${anime.id}`} className={btnPrimary}>
+            <button type="button" className={btnPrimary} onClick={() => openLog(anime.id)}>
               {t.anime.logCta}
-            </Link>
+            </button>
             <button
               type="button"
               className={`${btnGhost} ${isFav ? "border-accent text-accent" : ""}`}

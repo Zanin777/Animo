@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { EntryRow } from "@/components/EntryRow";
+import { openLog } from "@/components/LogDrawer";
 import { Poster } from "@/components/Poster";
 import { Muted, PageTitle, SectionTitle, btnPrimary, card } from "@/components/ui";
 import { useCatalog } from "@/lib/catalog/local";
@@ -74,9 +75,9 @@ export function HomeView() {
       {entries.length === 0 ? (
         <div className={`${card} p-6 text-center`}>
           <Muted className="mx-auto max-w-sm">{t.home.empty}</Muted>
-          <Link href="/registrar" className={`${btnPrimary} mt-4`}>
+          <button type="button" onClick={() => openLog()} className={`${btnPrimary} mt-4`}>
             {t.home.emptyCta}
-          </Link>
+          </button>
         </div>
       ) : (
         <div className="grid gap-2.5">
