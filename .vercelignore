@@ -1,0 +1,11 @@
+# Nunca enviar segredos nem arquivos locais para a Vercel.
+.env
+.env.*
+!.env.local.example
+node_modules
+.next
+.claude
+.vercel
+*.log
+# caches dos scripts do TMDB (o catálogo já vem pronto em src/lib/catalog)
+tools/tmdb-*.json
