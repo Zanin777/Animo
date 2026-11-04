@@ -1,26 +1,85 @@
 @import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+@import "./tokens.css";
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  line-height: 1.55;
+  -webkit-tap-highlight-color: transparent;
 }
+
+/* selo hanko: igual ao de docs/estilo.html */
+.hanko {
+  --s: 44px;
+  width: var(--s);
+  height: var(--s);
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  color: var(--accent);
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  transform: rotate(-8deg);
+  font-family: var(--font-display);
+  font-size: calc(var(--s) * 0.36);
+  line-height: 1;
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.hanko-sm { --s: 32px; }
+.hanko-lg { --s: 72px; }
+
+/* pôster tipográfico */
+.poster {
+  aspect-ratio: 2 / 3;
+  border-radius: 8px;
+  padding: 12px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06), 0 6px 18px -10px rgba(0, 0, 0, 0.35);
+}
+.poster-t {
+  font-family: var(--font-display);
+  line-height: 1.05;
+  word-break: break-word;
+  position: relative;
+  z-index: 1;
+}
+.poster-meta {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.75;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+}
+.poster-mark {
+  position: absolute;
+  right: -14%;
+  bottom: 12%;
+  width: 70%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  opacity: 0.9;
+}
+.poster-rule {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 50%;
+  height: 1px;
+  opacity: 0.35;
+}
+.poster-xs {
+  padding: 6px;
+  border-radius: 5px;
+  box-shadow: none;
+}
+.poster-xs .poster-meta { display: none; }
+.poster-xs .poster-rule { left: 6px; right: 6px; }

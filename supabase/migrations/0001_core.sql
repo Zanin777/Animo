@@ -59,6 +59,7 @@ create table public.anime (
   id             uuid primary key default gen_random_uuid(),
   title          text not null check (char_length(title) between 1 and 200),
   title_original text check (char_length(title_original) <= 200),
+  aliases        text[] not null default '{}', -- outros nomes para a busca (ex.: "Attack on Titan")
   year           smallint check (year between 1910 and 2100),
   kind           anime_kind not null default 'tv',
   episodes       smallint check (episodes > 0),

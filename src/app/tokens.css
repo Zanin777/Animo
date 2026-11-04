@@ -1,41 +1,60 @@
-/* Cour — design tokens (Tailwind v4, importar em globals.css depois de `@import "tailwindcss";`)
-   Fonte da verdade visual. A página docs/estilo.html mostra estes valores em uso
-   (substitui o protótipo cour/index.html, que foi perdido). Mudou aqui, muda lá. */
+/* Cour — design tokens (Tailwind v4).
+   Direção de arte APROVADA em 2026-11-04: valores idênticos a docs/estilo.html.
+   Mudou aqui, muda lá. As fontes vêm de next/font (layout.tsx). */
 
-@theme {
-  --font-display: "Dela Gothic One", system-ui, sans-serif;   /* títulos, pôsteres tipográficos */
-  --font-sans: "Zen Kaku Gothic New", system-ui, sans-serif;  /* texto corrido */
+@theme inline {
+  --font-display: var(--font-dela), system-ui, sans-serif; /* títulos, selo, pôsteres */
+  --font-sans: var(--font-zen), system-ui, sans-serif;     /* texto corrido */
 
-  --color-crimson: #c41e3a;        /* destaque, selo hanko */
-  --color-crimson-ink: #9e1830;    /* hover / texto sobre fundo claro */
-  --color-paper: #f7f4ee;          /* fundo claro (papel washi) */
-  --color-ink: #1a1717;            /* texto principal */
-  --color-ink-muted: #6b6461;
-  --color-line: #e3ddd3;
+  /* cores semânticas (seguem o tema claro/escuro) */
+  --color-bg: var(--bg);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-card: var(--card);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+
+  /* paleta crua */
+  --color-crimson: #c41e3a;
+  --color-crimson-ink: #9e1830;
+  --color-paper: #f7f4ee;
+  --color-ink: #1a1717;
 
   --radius-card: 0.75rem;
 }
 
 :root {
-  --bg: var(--color-paper);
-  --fg: var(--color-ink);
-  --muted: var(--color-ink-muted);
-  --line: var(--color-line);
-  --accent: var(--color-crimson);
+  --bg: #f7f4ee;
+  --fg: #1a1717;
+  --muted: #6b6461;
+  --line: #e3ddd3;
+  --card: #fffdf9;
+  --accent: #c41e3a;
+  --accent-ink: #9e1830;
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #121011;
     --fg: #f1ece4;
     --muted: #a39b95;
     --line: #2a2526;
+    --card: #1b1819;
     --accent: #e0334f;
+    --accent-ink: #f0566f;
+    color-scheme: dark;
   }
 }
 
-body {
-  background: var(--bg);
-  color: var(--fg);
-  font-family: var(--font-sans);
+:root[data-theme="dark"] {
+  --bg: #121011;
+  --fg: #f1ece4;
+  --muted: #a39b95;
+  --line: #2a2526;
+  --card: #1b1819;
+  --accent: #e0334f;
+  --accent-ink: #f0566f;
+  color-scheme: dark;
 }
