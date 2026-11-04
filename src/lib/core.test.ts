@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { normalize, rankMatches } from "./catalog/provider";
-import { SEED_ANIME } from "./catalog/seed";
+import generated from "./catalog/catalog.generated.json";
+import { rowToAnime, type CatalogRow } from "./catalog/seed";
+
+const SEED_ANIME = (generated.anime as CatalogRow[]).map(rowToAnime);
 import * as ops from "./diary/ops";
 import { computeStats } from "./diary/stats";
 import { EMPTY_STATE, type DiaryState } from "./diary/types";
@@ -74,8 +77,12 @@ describe("catálogo importado", () => {
       if (a.episodes !== null) expect(a.episodes).toBeGreaterThanOrEqual(1);
     }
   });
-  test("nada de URL de terceiros", () => {
+  test("nada de URL de terceiros; capa é só caminho do TMDB", () => {
     expect(JSON.stringify(SEED_ANIME)).not.toMatch(/https?:\/\//);
+    for (const a of SEED_ANIME) if (a.cover !== null) expect(a.cover).toMatch(/^\/[A-Za-z0-9_-]{5,64}\.(jpg|png)$/);
+  });
+  test("tem 2.000 animes", () => {
+    expect(SEED_ANIME.length).toBe(2000);
   });
 });
 

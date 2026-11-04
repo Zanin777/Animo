@@ -1,13 +1,44 @@
 import type { Anime, AnimeKind } from "./provider";
-import generated from "./catalog.generated.json";
 
 // Catálogo inicial gerado por tools/import-catalog.mjs a partir do
 // anime-offline-database (manami-project), licença ODbL 1.0 + DbCL 1.0.
-// Não editar o JSON à mão: ajuste tools/catalog-curated.json e rode o script.
+// Capas: caminhos de pôster do TMDB (tools/fetch-covers.mjs).
+// Não editar o JSON à mão: ajuste tools/catalog-curated.json e rode os scripts.
+//
+// O JSON (~600 KB) NÃO é importado de forma estática: carrega sob demanda
+// (import dinâmico), para não pesar no código de todas as páginas.
 
-type Row = { id: string; title: string; aliases: string[]; year: number | null; kind: string; episodes: number | null };
+export type CatalogRow = {
+  id: string;
+  title: string;
+  aliases: string[];
+  year: number | null;
+  kind: string;
+  episodes: number | null;
+  cover: string | null;
+};
 
-export const CATALOG_SOURCE = generated.source;
+export type CatalogSource = { name: string; author: string; url: string; tag: string; license: string };
+
+export function rowToAnime(a: CatalogRow): Anime {
+  return {
+    id: a.id,
+    title: a.title,
+    titleOriginal: null,
+    aliases: a.aliases,
+    year: a.year,
+    kind: a.kind as AnimeKind,
+    episodes: a.episodes,
+    cover: a.cover ?? null,
+    isVerified: true,
+  };
+}
+
+export async function loadCatalogFile(): Promise<{ source: CatalogSource; anime: Anime[] }> {
+  const mod = await import("./catalog.generated.json");
+  const data = mod.default as { source: CatalogSource; anime: CatalogRow[] };
+  return { source: data.source, anime: data.anime.map(rowToAnime) };
+}
 
 /** Destaques na tela Buscar (ids de tools/catalog-curated.json). */
 export const FEATURED_IDS = [
@@ -15,14 +46,3 @@ export const FEATURED_IDS = [
   "spy-x-family", "sen-to-chihiro", "fma-brotherhood", "chainsaw-man", "bocchi-the-rock",
   "one-piece", "dandadan", "kimi-no-na-wa", "dungeon-meshi", "mob-psycho-100",
 ];
-
-export const SEED_ANIME: Anime[] = (generated.anime as Row[]).map((a) => ({
-  id: a.id,
-  title: a.title,
-  titleOriginal: null,
-  aliases: a.aliases,
-  year: a.year,
-  kind: a.kind as AnimeKind,
-  episodes: a.episodes,
-  isVerified: true,
-}));

@@ -43,7 +43,9 @@ export function LogView() {
       <PageTitle>{t.log.title}</PageTitle>
 
       <Step n={1} title={t.log.step1}>
-        {anime ? (
+        {!anime && preset && !catalog.ready ? (
+          <div className="h-12" />
+        ) : anime ? (
           <div className="flex items-center gap-3">
             <Poster anime={anime} size="xs" className="w-12 flex-none" />
             <div className="min-w-0 flex-1">

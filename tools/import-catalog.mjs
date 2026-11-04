@@ -9,7 +9,7 @@
 //   - limpa caracteres de controle/bidi/zero-width, respeita os limites do schema
 //   - NÃO guarda imagens nem URLs de terceiros
 import { createHash } from "node:crypto";
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const SOURCE = {
@@ -24,6 +24,10 @@ const SOURCE = {
 const root = new URL("..", import.meta.url);
 const OUT = fileURLToPath(new URL("src/lib/catalog/catalog.generated.json", root));
 const CURATED = JSON.parse(readFileSync(new URL("tools/catalog-curated.json", root), "utf8")).items;
+// Capas do TMDB já encontradas (tools/fetch-covers.mjs). Só o caminho do pôster, validado.
+const COVERS_FILE = new URL("tools/tmdb-covers.json", root);
+const COVERS = existsSync(COVERS_FILE) ? JSON.parse(readFileSync(COVERS_FILE, "utf8")) : {};
+const POSTER_PATH =/^\/[A-Za-z0-9_-]{5,64}\.(jpg|png)$/;
 
 const [, , input, ...rest] = process.argv;
 if (!input) {
@@ -31,7 +35,7 @@ if (!input) {
   process.exit(1);
 }
 const li = rest.indexOf("--limit");
-const LIMIT = li >= 0 ? Number(rest[li + 1]) : 500;
+const LIMIT = li >= 0 ? Number(rest[li + 1]) : 2000;
 
 // ── integridade ──
 const buf = readFileSync(input);
@@ -70,6 +74,7 @@ function toAnime(a, id, extraAliases = []) {
     aliases.push(c);
     if (aliases.length >= 8 + extraAliases.length) break;
   }
+  const cover = COVERS[id]?.posterPath;
   return {
     id,
     title,
@@ -78,6 +83,7 @@ function toAnime(a, id, extraAliases = []) {
     kind,
     // em exibição o total ainda não é conhecido
     episodes: a.status === "ONGOING" ? null : intIn(a.episodes, 1, 5000),
+    cover: typeof cover === "string" && POSTER_PATH.test(cover) ? cover : null,
   };
 }
 
@@ -123,10 +129,11 @@ for (const a of out) {
     a.aliases.every((s) => s.length <= 100 && !HAS_UNSAFE.test(s)) &&
     !HAS_UNSAFE.test(a.title) &&
     (a.year === null || (a.year >= 1910 && a.year <= 2100)) &&
-    (a.episodes === null || (a.episodes >= 1 && a.episodes <= 5000));
+    (a.episodes === null || (a.episodes >= 1 && a.episodes <= 5000)) &&
+    (a.cover === null || POSTER_PATH.test(a.cover));
   if (!ok) throw new Error(`item inválido: ${JSON.stringify(a)}`);
 }
 
 out.sort((x, y) => x.title.localeCompare(y.title));
 writeFileSync(OUT, JSON.stringify({ source: { ...SOURCE, lastUpdate: db.lastUpdate }, anime: out }) + "\n");
-console.log(`ok: ${out.length} animes (${CURATED.length} curados) → ${OUT}`);
+console.log(`ok: ${out.length} animes (${CURATED.length} curados, ${out.filter((a) => a.cover).length} com capa) → ${OUT}`);

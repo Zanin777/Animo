@@ -48,7 +48,9 @@ export const ptBR = {
     cancel: "Cancelar",
     userCreated: "Adicionado por usuário",
     catalog: "Destaques",
-    catalogCredit: (n: number) => `${n} animes no catálogo. Dados de`,
+    catalogCredit: (n: number) => `${n.toLocaleString("pt-BR")} animes no catálogo. Dados de`,
+    tmdbCredit: "Capas de",
+    tmdbNotice: "Este produto usa a API do TMDB, mas não é endossado nem certificado pelo TMDB.",
   },
   log: {
     title: "Registrar",

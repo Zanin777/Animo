@@ -13,6 +13,8 @@ export interface Anime {
   year: number | null;
   kind: AnimeKind;
   episodes: number | null;
+  /** caminho do pôster no TMDB (ex.: "/abc123.jpg"); null = pôster tipográfico */
+  cover: string | null;
   isVerified: boolean;
 }
 

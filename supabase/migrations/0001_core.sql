@@ -63,6 +63,9 @@ create table public.anime (
   year           smallint check (year between 1910 and 2100),
   kind           anime_kind not null default 'tv',
   episodes       smallint check (episodes > 0),
+  -- capa: só o caminho do pôster no TMDB; a URL é montada no app (via otimizador do Next)
+  tmdb_id        integer,
+  cover_path     text check (cover_path ~ '^/[A-Za-z0-9_-]{5,64}\.(jpg|png)$'),
   created_by     uuid references public.profiles (id) on delete set null,
   is_verified    boolean not null default false,
   created_at     timestamptz not null default now(),

@@ -170,6 +170,7 @@ export function addCustomAnime(s: DiaryState, input: NewAnimeInput, ctx: Ctx): {
     year: input.year ?? null,
     kind: input.kind ?? "tv",
     episodes: input.episodes ?? null,
+    cover: null,
     isVerified: false,
   };
   return { anime, state: { ...s, customAnime: [...s.customAnime, anime] } };

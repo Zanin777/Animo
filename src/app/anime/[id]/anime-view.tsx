@@ -21,7 +21,7 @@ export function AnimeView() {
   const [notice, setNotice] = useState<string | null>(null);
   const [listId, setListId] = useState("");
 
-  if (!anime) return <Muted>{t.anime.notFound}</Muted>;
+  if (!anime) return catalog.ready ? <Muted>{t.anime.notFound}</Muted> : null;
 
   const lib = state.library[anime.id];
   const isFav = state.favorites.includes(anime.id);

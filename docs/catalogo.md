@@ -24,3 +24,16 @@ O que usamos do repositório é **um arquivo JSON**, só lido com `JSON.parse`. 
 | Números | ano fora de 1910–2100 e episódios fora de 1–5000 viram `null`; em exibição, episódios = `null` |
 
 A importação valida cada item no fim; se algum fugir das regras, nada é gravado.
+
+## Capas (TMDB)
+
+Decisão de 2026-11-04: capa oficial do TMDB onde houver; o pôster tipográfico da direção de arte continua como reserva (sem capa, ou se a imagem falhar).
+
+- **Termos:** API grátis para uso **não comercial**, com crédito (texto no rodapé de /buscar + **logo do TMDB, ainda a adicionar** a partir dos arquivos oficiais deles) e o aviso "não é endossado nem certificado pelo TMDB". **Premium, anúncios ou qualquer receita exigem contrato escrito com o TMDB antes.** ([termos](https://www.themoviedb.org/api-terms-of-use))
+- **Chave:** só em `.env.local` (ignorado pelo Git), usada só pelo script `tools/fetch-covers.mjs`. Nunca vai para o navegador.
+- **O que guardamos:** só o caminho do pôster (ex.: `/abc123.jpg`), validado por regex no script, no app (`Poster.tsx`) e no banco (`check` em `anime.cover_path`).
+- **Privacidade:** as imagens passam pelo otimizador do Next (`/_next/image`), então o navegador do usuário não fala direto com o TMDB. `next.config.ts` só aceita `image.tmdb.org/t/p/w342/**`, sem redirecionamentos.
+- **Custo:** na Vercel, a otimização de imagens tem cota no plano grátis; com cache de 31 dias deve sobrar para o primeiro marco, mas vale acompanhar.
+- **Limitação:** o TMDB agrupa temporadas numa série só, então "Season 2" usa a capa da série.
+
+Rodar: `npm run covers` (e `npm run covers -- --retry` para tentar de novo quem não foi achado).

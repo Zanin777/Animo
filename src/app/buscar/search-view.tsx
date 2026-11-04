@@ -3,14 +3,15 @@
 import { useRouter } from "next/navigation";
 import { AnimeSearch } from "@/components/AnimeSearch";
 import { AnimeTile, PageTitle, PosterGrid, SectionTitle } from "@/components/ui";
-import { seedAnime } from "@/lib/catalog/local";
-import { CATALOG_SOURCE, FEATURED_IDS, SEED_ANIME } from "@/lib/catalog/seed";
+import { useCatalog } from "@/lib/catalog/local";
+import { FEATURED_IDS } from "@/lib/catalog/seed";
 import { t } from "@/messages";
-
-const featured = FEATURED_IDS.map(seedAnime).filter((a) => a !== null);
 
 export function SearchView() {
   const router = useRouter();
+  const catalog = useCatalog();
+  const featured = FEATURED_IDS.map(catalog.get).filter((a) => a !== null);
+
   return (
     <>
       <PageTitle>{t.search.title}</PageTitle>
@@ -32,14 +33,25 @@ export function SearchView() {
         ))}
       </PosterGrid>
 
-      {/* Crédito exigido pela licença ODbL do catálogo */}
-      <p className="mt-10 text-xs text-muted">
-        {t.search.catalogCredit(SEED_ANIME.length)}{" "}
-        <a href={CATALOG_SOURCE.url} className="underline" target="_blank" rel="noopener noreferrer">
-          {CATALOG_SOURCE.name}
-        </a>{" "}
-        ({CATALOG_SOURCE.author}), {CATALOG_SOURCE.license}.
-      </p>
+      {/* Créditos exigidos: ODbL (dados) e TMDB (capas) */}
+      {catalog.source && (
+        <div className="mt-10 grid gap-1 text-xs text-muted">
+          <p>
+            {t.search.catalogCredit(catalog.size)}{" "}
+            <a href={catalog.source.url} className="underline" target="_blank" rel="noopener noreferrer">
+              {catalog.source.name}
+            </a>{" "}
+            ({catalog.source.author}), {catalog.source.license}.
+          </p>
+          <p>
+            {t.search.tmdbCredit}{" "}
+            <a href="https://www.themoviedb.org" className="underline" target="_blank" rel="noopener noreferrer">
+              TMDB
+            </a>
+            . {t.search.tmdbNotice}
+          </p>
+        </div>
+      )}
     </>
   );
 }
