@@ -1,12 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { Poster } from "@/components/Poster";
+import { useAuth } from "@/lib/auth";
+import { SUPABASE_ENABLED } from "@/lib/supabase/env";
 import { SlidingNumber } from "@/components/SlidingNumber";
 import { ThemeSwitch } from "@/components/ThemeSwitch";
 import { btnGhost, btnPrimary, input } from "@/components/ui";
 import type { Anime } from "@/lib/catalog/provider";
-import { diary } from "@/lib/diary/store";
+import { diary, useSyncStatus } from "@/lib/diary/store";
 import type { LocalProfile } from "@/lib/diary/types";
 import { t } from "@/messages";
 
@@ -53,6 +56,7 @@ export function ProfileHeader({ profile, backdrop, stats }: { profile: LocalProf
             {t.profile.edit}
           </button>
           <ThemeSwitch />
+          <AccountBadge />
         </div>
       )}
       {editing && <EditProfile profile={profile} onDone={() => setEditing(false)} />}
@@ -71,18 +75,55 @@ export function ProfileHeader({ profile, backdrop, stats }: { profile: LocalProf
   );
 }
 
+/** Entrar/criar conta (convidado) ou estado da nuvem + sair (logado). */
+function AccountBadge() {
+  const auth = useAuth();
+  const sync = useSyncStatus();
+  if (!SUPABASE_ENABLED || auth.status === "loading") return null;
+  if (auth.status === "guest") {
+    return (
+      <span className="flex items-center gap-2">
+        <Link href="/entrar" className={btnPrimary}>
+          {t.auth.signinCta}
+        </Link>
+        <Link href="/cadastro" className="text-sm text-accent underline">
+          {t.auth.signupCta}
+        </Link>
+      </span>
+    );
+  }
+  return (
+    <span className="flex items-center gap-2 text-xs text-muted">
+      <span aria-live="polite">{sync === "syncing" ? t.auth.syncing : sync === "error" ? t.auth.syncError : "☁︎"}</span>
+      <button type="button" className={btnGhost} onClick={() => void diary.signOut()}>
+        {t.auth.signout}
+      </button>
+    </span>
+  );
+}
+
 function EditProfile({ profile, onDone }: { profile: LocalProfile; onDone: () => void }) {
   const [displayName, setName] = useState(profile.displayName);
   const [handle, setHandle] = useState(profile.handle);
   const [bio, setBio] = useState(profile.bio);
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const messages = {
+    handle: t.profile.errHandle,
+    displayName: t.profile.errName,
+    bio: t.profile.errBio,
+    taken: t.auth.handleTaken,
+    network: t.auth.syncError,
+  } as const;
   return (
     <form
       className="mt-4 grid gap-3 rounded-xl border border-line bg-card p-4"
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
-        const err = diary.updateProfile({ displayName, handle, bio });
-        if (err) setError(err === "handle" ? t.profile.errHandle : err === "displayName" ? t.profile.errName : t.profile.errBio);
+        setBusy(true);
+        const err = await diary.saveProfile({ displayName, handle, bio });
+        setBusy(false);
+        if (err) setError(messages[err]);
         else onDone();
       }}
     >
@@ -113,8 +154,8 @@ function EditProfile({ profile, onDone }: { profile: LocalProfile; onDone: () =>
       </label>
       {error && <p className="text-sm text-accent">{error}</p>}
       <div className="flex gap-2">
-        <button type="submit" className={btnPrimary}>
-          {t.profile.save}
+        <button type="submit" className={btnPrimary} disabled={busy}>
+          {busy ? "…" : t.profile.save}
         </button>
         <button type="button" className={btnGhost} onClick={onDone}>
           {t.profile.cancel}
