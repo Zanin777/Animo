@@ -47,7 +47,8 @@ export const ptBR = {
     save: "Adicionar",
     cancel: "Cancelar",
     userCreated: "Adicionado por usuário",
-    catalog: "Catálogo",
+    catalog: "Destaques",
+    catalogCredit: (n: number) => `${n} animes no catálogo. Dados de`,
   },
   log: {
     title: "Registrar",

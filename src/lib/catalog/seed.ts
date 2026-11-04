@@ -1,65 +1,28 @@
 import type { Anime, AnimeKind } from "./provider";
+import generated from "./catalog.generated.json";
 
-// Catálogo inicial (amostra). Só dados básicos, sem imagens de terceiros.
-// Meta do MVP: 300 a 500 títulos. Conferir ano/episódios antes de ir para o banco.
-type Row = [id: string, title: string, year: number, kind: AnimeKind, episodes: number | null, aliases?: string[]];
+// Catálogo inicial gerado por tools/import-catalog.mjs a partir do
+// anime-offline-database (manami-project), licença ODbL 1.0 + DbCL 1.0.
+// Não editar o JSON à mão: ajuste tools/catalog-curated.json e rode o script.
 
-const rows: Row[] = [
-  ["frieren", "Sousou no Frieren", 2023, "tv", 28, ["Frieren", "Frieren: Beyond Journey's End"]],
-  ["cowboy-bebop", "Cowboy Bebop", 1998, "tv", 26],
-  ["fma-brotherhood", "Fullmetal Alchemist: Brotherhood", 2009, "tv", 64, ["FMAB", "Hagane no Renkinjutsushi"]],
-  ["shingeki-no-kyojin", "Shingeki no Kyojin", 2013, "tv", 25, ["Attack on Titan", "Ataque dos Titãs"]],
-  ["steins-gate", "Steins;Gate", 2011, "tv", 24],
-  ["mob-psycho-100", "Mob Psycho 100", 2016, "tv", 12],
-  ["hunter-x-hunter-2011", "Hunter x Hunter (2011)", 2011, "tv", 148, ["HxH"]],
-  ["death-note", "Death Note", 2006, "tv", 37],
-  ["evangelion", "Neon Genesis Evangelion", 1995, "tv", 26, ["Shinseiki Evangelion", "Eva"]],
-  ["kimi-no-na-wa", "Kimi no Na wa.", 2016, "movie", 1, ["Your Name", "Seu Nome"]],
-  ["sen-to-chihiro", "Sen to Chihiro no Kamikakushi", 2001, "movie", 1, ["Spirited Away", "A Viagem de Chihiro"]],
-  ["mononoke-hime", "Mononoke Hime", 1997, "movie", 1, ["Princess Mononoke", "Princesa Mononoke"]],
-  ["tonari-no-totoro", "Tonari no Totoro", 1988, "movie", 1, ["My Neighbor Totoro", "Meu Amigo Totoro"]],
-  ["kimetsu-no-yaiba", "Kimetsu no Yaiba", 2019, "tv", 26, ["Demon Slayer"]],
-  ["jujutsu-kaisen", "Jujutsu Kaisen", 2020, "tv", 24, ["JJK"]],
-  ["spy-x-family", "Spy x Family", 2022, "tv", 25],
-  ["chainsaw-man", "Chainsaw Man", 2022, "tv", 12],
-  ["bocchi-the-rock", "Bocchi the Rock!", 2022, "tv", 12],
-  ["odd-taxi", "Odd Taxi", 2021, "tv", 13],
-  ["dungeon-meshi", "Dungeon Meshi", 2024, "tv", 24, ["Delicious in Dungeon"]],
-  ["ping-pong", "Ping Pong the Animation", 2014, "tv", 11],
-  ["mononoke-2007", "Mononoke", 2007, "tv", 12],
-  ["monster", "Monster", 2004, "tv", 74],
-  ["vinland-saga", "Vinland Saga", 2019, "tv", 24],
-  ["mushishi", "Mushishi", 2005, "tv", 26],
-  ["haikyuu", "Haikyuu!!", 2014, "tv", 25],
-  ["made-in-abyss", "Made in Abyss", 2017, "tv", 13],
-  ["violet-evergarden", "Violet Evergarden", 2018, "tv", 13],
-  ["koe-no-katachi", "Koe no Katachi", 2016, "movie", 1, ["A Silent Voice", "Uma Voz Silenciosa"]],
-  ["akira", "Akira", 1988, "movie", 1],
-  ["ghost-in-the-shell", "Ghost in the Shell", 1995, "movie", 1, ["Koukaku Kidoutai"]],
-  ["perfect-blue", "Perfect Blue", 1997, "movie", 1],
-  ["paprika", "Paprika", 2006, "movie", 1],
-  ["one-piece", "One Piece", 1999, "tv", null],
-  ["naruto", "Naruto", 2002, "tv", 220],
-  ["code-geass", "Code Geass: Hangyaku no Lelouch", 2006, "tv", 25, ["Code Geass: Lelouch of the Rebellion"]],
-  ["kaguya-sama", "Kaguya-sama wa Kokurasetai", 2019, "tv", 12, ["Kaguya-sama: Love Is War"]],
-  ["oshi-no-ko", "Oshi no Ko", 2023, "tv", 11, ["[Oshi no Ko]"]],
-  ["cyberpunk-edgerunners", "Cyberpunk: Edgerunners", 2022, "ona", 10],
-  ["samurai-champloo", "Samurai Champloo", 2004, "tv", 26],
-  ["gurren-lagann", "Tengen Toppa Gurren Lagann", 2007, "tv", 27, ["Gurren Lagann"]],
-  ["kusuriya", "Kusuriya no Hitorigoto", 2023, "tv", 24, ["The Apothecary Diaries"]],
-  ["dandadan", "Dandadan", 2024, "tv", 12],
-  ["toradora", "Toradora!", 2008, "tv", 25],
-  ["clannad-after-story", "Clannad: After Story", 2008, "tv", 24],
-  ["hajime-no-ippo", "Hajime no Ippo", 2000, "tv", 75, ["Fighting Spirit"]],
+type Row = { id: string; title: string; aliases: string[]; year: number | null; kind: string; episodes: number | null };
+
+export const CATALOG_SOURCE = generated.source;
+
+/** Destaques na tela Buscar (ids de tools/catalog-curated.json). */
+export const FEATURED_IDS = [
+  "frieren", "shingeki-no-kyojin", "cowboy-bebop", "kimetsu-no-yaiba", "jujutsu-kaisen",
+  "spy-x-family", "sen-to-chihiro", "fma-brotherhood", "chainsaw-man", "bocchi-the-rock",
+  "one-piece", "dandadan", "kimi-no-na-wa", "dungeon-meshi", "mob-psycho-100",
 ];
 
-export const SEED_ANIME: Anime[] = rows.map(([id, title, year, kind, episodes, aliases = []]) => ({
-  id,
-  title,
+export const SEED_ANIME: Anime[] = (generated.anime as Row[]).map((a) => ({
+  id: a.id,
+  title: a.title,
   titleOriginal: null,
-  aliases,
-  year,
-  kind,
-  episodes,
+  aliases: a.aliases,
+  year: a.year,
+  kind: a.kind as AnimeKind,
+  episodes: a.episodes,
   isVerified: true,
 }));

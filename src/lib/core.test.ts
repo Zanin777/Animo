@@ -47,12 +47,35 @@ describe("busca", () => {
     expect(rankMatches(SEED_ANIME, "attack on titan")[0].id).toBe("shingeki-no-kyojin");
     expect(rankMatches(SEED_ANIME, "titãs")[0].id).toBe("shingeki-no-kyojin");
   });
-  test("começa com > contém", () => {
-    const r = rankMatches(SEED_ANIME, "mono");
-    expect(r[0].title.toLowerCase().startsWith("mono")).toBe(true);
+  test("exato > começa com > contém", () => {
+    const mk = (id: string, title: string) => ({ ...frieren, id, title, aliases: [] });
+    const list = [mk("c", "Princesa Mononoke"), mk("b", "Mononoke Hime"), mk("a", "Mononoke")];
+    expect(rankMatches(list, "mononoke").map((a) => a.id)).toEqual(["a", "b", "c"]);
   });
   test("busca vazia não retorna nada", () => {
     expect(rankMatches(SEED_ANIME, "   ")).toEqual([]);
+  });
+});
+
+describe("catálogo importado", () => {
+  const UNSAFE = /[\u0000-\u001f\u007f-\u009f​-‏‪-‮⁠-⁩﻿]/;
+  test("tem os curados com id fixo", () => {
+    for (const id of ["frieren", "shingeki-no-kyojin", "perfect-blue", "oshi-no-ko", "one-piece"]) {
+      expect(SEED_ANIME.find((a) => a.id === id), id).toBeDefined();
+    }
+  });
+  test("ids únicos e tudo dentro dos limites do schema", () => {
+    expect(new Set(SEED_ANIME.map((a) => a.id)).size).toBe(SEED_ANIME.length);
+    for (const a of SEED_ANIME) {
+      expect(a.title.length).toBeLessThanOrEqual(200);
+      expect(UNSAFE.test(a.title)).toBe(false);
+      for (const s of a.aliases) expect(s.length <= 100 && !UNSAFE.test(s)).toBe(true);
+      if (a.year !== null) expect(a.year).toBeGreaterThanOrEqual(1910);
+      if (a.episodes !== null) expect(a.episodes).toBeGreaterThanOrEqual(1);
+    }
+  });
+  test("nada de URL de terceiros", () => {
+    expect(JSON.stringify(SEED_ANIME)).not.toMatch(/https?:\/\//);
   });
 });
 
