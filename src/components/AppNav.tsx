@@ -30,7 +30,7 @@ export function NavShell({ path }: { path: string | null }) {
       <header className="sticky top-0 z-20 hidden border-b border-line bg-bg/90 backdrop-blur md:block">
         <nav className="mx-auto flex max-w-3xl items-center gap-6 px-4 py-3">
           <Link href="/" className="mr-auto font-display text-2xl leading-none">
-            cour<span className="text-accent">.</span>
+            aniora<span className="text-accent">.</span>
           </Link>
           {ITEMS.map((it) =>
             "primary" in it ? (

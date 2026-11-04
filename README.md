@@ -1,4 +1,4 @@
-# cour.
+# aniora.
 
 Diário de anime estilo Letterboxd, em PT-BR.
 

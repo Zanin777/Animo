@@ -29,7 +29,7 @@ export function HomeView() {
     <>
       <PageTitle>
         <span className="md:hidden">
-          cour<span className="text-accent">.</span>
+          aniora<span className="text-accent">.</span>
         </span>
         <span className="hidden md:inline">{t.home.title}</span>
       </PageTitle>

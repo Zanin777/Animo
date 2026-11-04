@@ -20,7 +20,7 @@ const zen = Zen_Kaku_Gothic_New({
 });
 
 export const metadata: Metadata = {
-  title: { default: "Cour", template: "%s · Cour" },
+  title: { default: "Aniora", template: "%s · Aniora" },
   description: t.app.tagline,
 };
 

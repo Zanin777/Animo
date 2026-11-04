@@ -1,7 +1,7 @@
 // Todos os textos da interface. EN entra depois como en.ts com o mesmo formato.
 export const ptBR = {
   app: {
-    name: "cour",
+    name: "Aniora",
     tagline: "Seu diário de anime.",
   },
   nav: {
@@ -52,7 +52,7 @@ export const ptBR = {
     friendsRecommend: (n: number) => `${n} ${n === 1 ? "amigo recomenda" : "amigos recomendam"}`,
     seeCatalog: "Ver catálogo completo",
     friendsEmpty: "Siga pessoas para ver o que elas recomendam.",
-    rankingsTitle: "Rankings do Cour",
+    rankingsTitle: "Rankings do Aniora",
     tabTop: "Top Anime ⭐",
     tabWatched: "Mais vistos 👀",
     watchers: (n: number) => `${n.toLocaleString("pt-BR")} ${n === 1 ? "pessoa viu" : "pessoas viram"}`,

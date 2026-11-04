@@ -7,7 +7,9 @@ import type { Anime, NewAnimeInput } from "@/lib/catalog/provider";
 import * as ops from "./ops";
 import { EMPTY_STATE, type DiaryState, type WatchStatus } from "./types";
 
-const KEY = "cour:v1";
+const KEY = "aniora:v1";
+/** Nome antigo do app (Cour). Lido uma vez e migrado para KEY. */
+const LEGACY_KEY = "cour:v1";
 
 let state: DiaryState = EMPTY_STATE;
 let loaded = false;
@@ -17,7 +19,15 @@ function load() {
   if (loaded || typeof window === "undefined") return;
   loaded = true;
   try {
-    const raw = window.localStorage.getItem(KEY);
+    let raw = window.localStorage.getItem(KEY);
+    if (!raw) {
+      const legacy = window.localStorage.getItem(LEGACY_KEY);
+      if (legacy) {
+        window.localStorage.setItem(KEY, legacy);
+        window.localStorage.removeItem(LEGACY_KEY);
+        raw = legacy;
+      }
+    }
     if (raw) {
       const parsed = JSON.parse(raw) as DiaryState;
       if (parsed?.version === 1) state = { ...EMPTY_STATE, ...parsed };

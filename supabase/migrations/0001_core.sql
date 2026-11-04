@@ -1,4 +1,4 @@
--- Cour: schema do núcleo do MVP
+-- Aniora: schema do núcleo do MVP
 -- profiles, anime, library, entries, favorites, lists, list_items — com RLS.
 -- Convenção: tudo que é do usuário é público para leitura (estilo Letterboxd),
 -- mas só o dono escreve. Listas podem ser privadas.
