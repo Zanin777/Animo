@@ -58,6 +58,31 @@ const intIn = (v, lo, hi) => (Number.isInteger(v) && v >= lo && v <= hi ? v : nu
 const slug = (s) =>
   s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "anime";
 
+// Gêneros: lista fechada (as tags da base são livres). Ordem = prioridade
+// para escolher até 3 (os mais específicos primeiro). Rótulos PT em messages.
+const GENRES = [
+  ["sports", ["sports"]],
+  ["mecha", ["mecha"]],
+  ["music", ["music"]],
+  ["action", ["action"]],
+  ["romance", ["romance"]],
+  ["fantasy", ["fantasy"]],
+  ["scifi", ["sci-fi", "science fiction", "science-fiction", "sci fi"]],
+  ["mystery", ["mystery"]],
+  ["horror", ["horror"]],
+  ["slice-of-life", ["slice of life"]],
+  ["psychological", ["psychological"]],
+  ["thriller", ["thriller", "suspense"]],
+  ["supernatural", ["supernatural"]],
+  ["adventure", ["adventure"]],
+  ["comedy", ["comedy"]],
+  ["drama", ["drama"]],
+];
+function genresOf(tags = []) {
+  const set = new Set(tags.map((t) => String(t).toLowerCase()));
+  return GENRES.filter(([, names]) => names.some((n) => set.has(n))).map(([key]) => key).slice(0, 3);
+}
+
 function toAnime(a, id, extraAliases = []) {
   const title = clean(a.title);
   if (!title || title.length > 200) return null;
@@ -84,6 +109,7 @@ function toAnime(a, id, extraAliases = []) {
     // em exibição o total ainda não é conhecido
     episodes: a.status === "ONGOING" ? null : intIn(a.episodes, 1, 5000),
     cover: typeof cover === "string" && POSTER_PATH.test(cover) ? cover : null,
+    genres: genresOf(a.tags),
   };
 }
 

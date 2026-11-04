@@ -7,6 +7,7 @@ import { loadCatalogFile, type CatalogSource } from "./seed";
 
 type Loaded = { source: CatalogSource; anime: Anime[] };
 
+const NONE: Anime[] = [];
 let loaded: Loaded | null = null;
 let loading: Promise<Loaded> | null = null;
 const listeners = new Set<() => void>();
@@ -30,6 +31,8 @@ export type LocalCatalog = AnimeCatalogProvider & {
   /** false até o arquivo do catálogo chegar */
   ready: boolean;
   size: number;
+  /** catálogo base (sem os criados pelo usuário); referência estável */
+  all: Anime[];
   source: CatalogSource | null;
   get(id: string): Anime | null;
 };
@@ -41,6 +44,7 @@ export function createLocalCatalog(base: Loaded | null, custom: Anime[]): LocalC
   return {
     ready: base !== null,
     size: all.length,
+    all: base?.anime ?? NONE,
     source: base?.source ?? null,
     get: (id) => byId.get(id) ?? null,
     search: async (q, opts) => {

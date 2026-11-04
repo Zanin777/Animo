@@ -5,12 +5,15 @@ import { EntryRow } from "@/components/EntryRow";
 import { Poster } from "@/components/Poster";
 import { Muted, PageTitle, SectionTitle, btnPrimary, card } from "@/components/ui";
 import { useCatalog } from "@/lib/catalog/local";
+import { useCommunity } from "@/lib/community";
 import { diary, useDiary } from "@/lib/diary/store";
 import { t } from "@/messages";
+import { ActivitySection, CoverMarquee, FeaturedListsSection, RankingsSection, TrendingSection } from "./home-sections";
 
 export function HomeView() {
   const state = useDiary();
   const catalog = useCatalog();
+  const snap = useCommunity();
 
   const watching = Object.values(state.library)
     .filter((l) => l.status === "watching")
@@ -20,7 +23,7 @@ export function HomeView() {
 
   const entries = [...state.entries]
     .sort((a, b) => b.watchedOn.localeCompare(a.watchedOn) || b.createdAt.localeCompare(a.createdAt))
-    .slice(0, 30);
+    .slice(0, 10);
 
   return (
     <>
@@ -31,13 +34,15 @@ export function HomeView() {
         <span className="hidden md:inline">{t.home.title}</span>
       </PageTitle>
 
+      <CoverMarquee snap={snap} catalog={catalog} />
+
       {watching.length > 0 && (
         <>
           <SectionTitle>{t.home.watchingTitle}</SectionTitle>
           <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2">
             {watching.map(({ item, anime }) => (
               <div key={item.animeId} className="w-32 flex-none snap-start">
-                <Link href={`/anime/${anime!.id}`}>
+                <Link href={`/anime/${anime!.id}`} aria-label={anime!.title}>
                   <Poster anime={anime!} />
                 </Link>
                 <div className="mt-2 flex items-center justify-between gap-1">
@@ -53,6 +58,15 @@ export function HomeView() {
               </div>
             ))}
           </div>
+        </>
+      )}
+
+      {snap.ready && (
+        <>
+          <TrendingSection snap={snap} catalog={catalog} />
+          <RankingsSection snap={snap} catalog={catalog} />
+          <ActivitySection snap={snap} catalog={catalog} />
+          <FeaturedListsSection snap={snap} catalog={catalog} />
         </>
       )}
 

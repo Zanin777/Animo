@@ -16,6 +16,7 @@ export type CatalogRow = {
   kind: string;
   episodes: number | null;
   cover: string | null;
+  genres?: string[];
 };
 
 export type CatalogSource = { name: string; author: string; url: string; tag: string; license: string };
@@ -30,6 +31,7 @@ export function rowToAnime(a: CatalogRow): Anime {
     kind: a.kind as AnimeKind,
     episodes: a.episodes,
     cover: a.cover ?? null,
+    genres: a.genres ?? [],
     isVerified: true,
   };
 }

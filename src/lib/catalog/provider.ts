@@ -15,6 +15,8 @@ export interface Anime {
   episodes: number | null;
   /** caminho do pôster no TMDB (ex.: "/abc123.jpg"); null = pôster tipográfico */
   cover: string | null;
+  /** até 3 chaves de gênero (rótulos em messages: t.genre) */
+  genres: string[];
   isVerified: boolean;
 }
 

@@ -30,6 +30,28 @@ body {
 .hanko-sm { --s: 32px; }
 .hanko-lg { --s: 72px; }
 
+/* faixa de capas passando no topo do Início */
+.marquee {
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+.marquee-track {
+  display: flex;
+  gap: 12px;
+  width: max-content;
+  animation: marquee 60s linear infinite;
+}
+.marquee:hover .marquee-track,
+.marquee:focus-within .marquee-track {
+  animation-play-state: paused;
+}
+@keyframes marquee {
+  to { transform: translateX(calc(-50% - 6px)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee { overflow-x: auto; mask-image: none; }
+  .marquee-track { animation: none; }
+}
+
 /* pôster tipográfico */
 .poster {
   aspect-ratio: 2 / 3;

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Dela_Gothic_One, Zen_Kaku_Gothic_New } from "next/font/google";
 import { Suspense } from "react";
 import { AppNav, NavShell } from "@/components/AppNav";
+import { InlineScript } from "@/components/InlineScript";
 import { themeBootScript } from "@/lib/theme";
 import { t } from "@/messages";
 import "./globals.css";
@@ -34,7 +35,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="pt-BR" className={`${dela.variable} ${zen.variable} antialiased`} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
+        <InlineScript html={themeBootScript} />
       </head>
       <body className="min-h-dvh">
         <Suspense fallback={<NavShell path={null} />}>
