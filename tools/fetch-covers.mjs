@@ -11,6 +11,7 @@
 // Regras: só resultados de Animação (gênero 16) de origem japonesa; o caminho
 // do pôster é validado por regex antes de entrar no catálogo.
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { applyTmdb } from "./lib/tmdb-merge.mjs";
 
 const TOKEN = process.env.TMDB_READ_TOKEN;
 if (!TOKEN) {
@@ -104,13 +105,10 @@ async function worker() {
 await Promise.all(Array.from({ length: CONCURRENCY }, worker));
 writeFileSync(CACHE, JSON.stringify(cache, null, 0));
 
-// junta no catálogo
-let withCover = 0;
-for (const a of catalog.anime) {
-  const p = cache[a.id]?.posterPath;
-  a.cover = typeof p === "string" && POSTER_PATH.test(p) ? p : null;
-  if (a.cover) withCover++;
-}
+// junta no catálogo (capas + temporadas já descobertas)
+const SEASONS = new URL("tools/tmdb-seasons.json", root);
+applyTmdb(catalog.anime, cache, existsSync(SEASONS) ? JSON.parse(readFileSync(SEASONS, "utf8")) : {});
+const withCover = catalog.anime.filter((a) => a.cover).length;
 writeFileSync(CATALOG, JSON.stringify(catalog) + "\n");
 const misses = catalog.anime.filter((a) => cache[a.id]?.miss).map((a) => a.title);
 console.log(`\nok: ${withCover} de ${catalog.anime.length} com capa. Sem capa (pôster tipográfico): ${misses.length}`);

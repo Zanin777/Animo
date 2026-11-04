@@ -1,4 +1,4 @@
-import type { Anime, AnimeKind } from "./provider";
+import type { Anime, AnimeKind, TmdbRef } from "./provider";
 
 // Catálogo inicial gerado por tools/import-catalog.mjs a partir do
 // anime-offline-database (manami-project), licença ODbL 1.0 + DbCL 1.0.
@@ -17,6 +17,7 @@ export type CatalogRow = {
   episodes: number | null;
   cover: string | null;
   genres?: string[];
+  tmdb?: TmdbRef | null;
 };
 
 export type CatalogSource = { name: string; author: string; url: string; tag: string; license: string };
@@ -32,6 +33,7 @@ export function rowToAnime(a: CatalogRow): Anime {
     episodes: a.episodes,
     cover: a.cover ?? null,
     genres: a.genres ?? [],
+    tmdb: a.tmdb ?? null,
     isVerified: true,
   };
 }

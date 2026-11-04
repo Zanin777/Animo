@@ -16,6 +16,22 @@ export interface CommunityEvent {
   minutesAgo: number;
 }
 
+/** Alguém viu (e talvez deu nota a) um episódio. */
+export interface EpisodeEvent {
+  user: string;
+  animeId: string;
+  episode: number;
+  ratingHalf: number | null;
+}
+
+export interface EpisodeStat {
+  animeId: string;
+  episode: number;
+  avgHalf: number | null;
+  ratings: number;
+  watchers: number;
+}
+
 export interface AnimeStat {
   animeId: string;
   avgHalf: number | null;
@@ -45,6 +61,7 @@ export interface CommunitySnapshot {
   /** true = dados inventados (só em desenvolvimento) */
   demo: boolean;
   events: CommunityEvent[];
+  episodeEvents: EpisodeEvent[];
   /** quem o usuário atual segue */
   following: string[];
   lists: PublicList[];

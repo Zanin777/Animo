@@ -12,7 +12,7 @@ import type { CommunitySnapshot } from "./types";
  */
 export const COMMUNITY_DEMO = process.env.NODE_ENV === "development";
 
-const EMPTY: CommunitySnapshot = { demo: false, events: [], following: [], lists: [] };
+const EMPTY: CommunitySnapshot = { demo: false, events: [], episodeEvents: [], following: [], lists: [] };
 
 export function useCommunity(): CommunitySnapshot & { ready: boolean } {
   const { ready, all } = useCatalog();

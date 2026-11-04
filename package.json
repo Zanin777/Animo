@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "covers": "node --env-file=.env.local tools/fetch-covers.mjs"
+    "covers": "node --env-file=.env.local tools/fetch-covers.mjs",
+    "seasons": "node --env-file=.env.local tools/fetch-seasons.mjs"
   },
   "dependencies": {
     "motion": "^14.9.1",

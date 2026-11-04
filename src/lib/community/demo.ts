@@ -3,7 +3,7 @@
 // catálogo real; pessoas, notas, reviews e listas são fictícias.
 // Some quando o Supabase entrar (ver community/index.ts).
 import type { Anime } from "@/lib/catalog/provider";
-import type { CommunityEvent, CommunitySnapshot, PublicList } from "./types";
+import type { CommunityEvent, CommunitySnapshot, EpisodeEvent, PublicList } from "./types";
 
 // Apelidos fictícios (não são pessoas reais).
 export const DEMO_USERS = [
@@ -72,5 +72,25 @@ export function buildDemoSnapshot(catalog: Anime[], featuredIds: string[]): Comm
     { id: "demo-conforto", title: "Para assistir de coberta num domingo", author: "yuzu_tea", animeIds: take((a) => has(a, "slice-of-life") && has(a, "comedy"), 8), likes: 97, minutesAgo: 60 * 72 },
   ];
 
-  return { demo: true, events, following: DEMO_FOLLOWING, lists };
+  // episódios: cada pessoa assiste do 1 até algum ponto e dá nota a parte deles.
+  // Alguns episódios são "marcantes" (nota bem acima da série).
+  const episodeEvents: EpisodeEvent[] = [];
+  for (const id of featured) {
+    const a = byId.get(id)!;
+    const total = Math.min(a.episodes ?? 0, 60);
+    if (a.kind === "movie" || total < 2) continue;
+    const base = qOf(id);
+    const peaks = new Set(Array.from({ length: Math.max(1, Math.floor(total / 8)) }, () => 1 + Math.floor(rand() * total)));
+    for (const user of DEMO_USERS) {
+      if (rand() < 0.35) continue;
+      const upTo = rand() < 0.5 ? total : 1 + Math.floor(rand() * total);
+      for (let ep = 1; ep <= upTo; ep++) {
+        const bump = peaks.has(ep) ? 2 : 0;
+        const ratingHalf = rand() < 0.55 ? Math.max(1, Math.min(10, base + bump + Math.round((rand() - 0.5) * 3))) : null;
+        episodeEvents.push({ user, animeId: id, episode: ep, ratingHalf });
+      }
+    }
+  }
+
+  return { demo: true, events, episodeEvents, following: DEMO_FOLLOWING, lists };
 }

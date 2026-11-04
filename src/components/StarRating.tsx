@@ -6,16 +6,18 @@ type Props = {
   /** meias estrelas 1..10, ou null */
   value: number | null;
   onChange: (half: number | null) => void;
+  size?: "sm" | "md";
+  label?: string;
 };
 
 /** 5 estrelas; metade esquerda = meia estrela. Tocar na nota atual limpa. */
-export function StarRating({ value, onChange }: Props) {
+export function StarRating({ value, onChange, size = "md", label = "Nota" }: Props) {
   return (
-    <div className="flex items-center gap-1" role="radiogroup" aria-label="Nota">
+    <div className={`flex items-center ${size === "sm" ? "gap-0" : "gap-1"}`} role="radiogroup" aria-label={label}>
       {[1, 2, 3, 4, 5].map((star) => {
         const fill = value === null ? 0 : Math.max(0, Math.min(1, (value - (star - 1) * 2) / 2));
         return (
-          <span key={star} className="relative inline-block text-[40px] leading-none select-none">
+          <span key={star} className={`relative inline-block leading-none select-none ${size === "sm" ? "text-[22px]" : "text-[40px]"}`}>
             <span className="text-line">★</span>
             <span
               className="absolute inset-0 overflow-hidden text-accent"

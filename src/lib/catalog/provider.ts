@@ -17,8 +17,14 @@ export interface Anime {
   cover: string | null;
   /** até 3 chaves de gênero (rótulos em messages: t.genre) */
   genres: string[];
+  /** onde achar no TMDB: filme, ou série + temporada + faixa de episódios */
+  tmdb: TmdbRef | null;
   isVerified: boolean;
 }
+
+export type TmdbRef =
+  | { id: number; type: "movie" }
+  | { id: number; type: "tv"; season: number; offset: number; count: number };
 
 export interface NewAnimeInput {
   title: string;

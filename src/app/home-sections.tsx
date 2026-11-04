@@ -8,7 +8,15 @@ import { Poster } from "@/components/Poster";
 import { Muted, SectionTitle, btnGhost, card } from "@/components/ui";
 import type { Anime } from "@/lib/catalog/provider";
 import type { LocalCatalog } from "@/lib/catalog/local";
-import { activity, mostWatched, topRated, trending, trendingAmongFriends } from "@/lib/community/aggregate";
+import {
+  activity,
+  mostWatched,
+  mostWatchedEpisodes,
+  topEpisodes,
+  topRated,
+  trending,
+  trendingAmongFriends,
+} from "@/lib/community/aggregate";
 import type { CommunitySnapshot } from "@/lib/community/types";
 import { t } from "@/messages";
 
@@ -70,9 +78,14 @@ export function TrendingSection({ snap, catalog }: Props) {
   );
 }
 
+type RankTab = "top" | "watched" | "topEp" | "watchedEp";
+
 export function RankingsSection({ snap, catalog }: Props) {
-  const [tab, setTab] = useState<"top" | "watched">("top");
-  const rows = tab === "top" ? topRated(snap.events, 10) : mostWatched(snap.events, 10);
+  const [tab, setTab] = useState<RankTab>("top");
+  const isEp = tab === "topEp" || tab === "watchedEp";
+  const rows = tab === "top" ? topRated(snap.events, 10) : tab === "watched" ? mostWatched(snap.events, 10) : [];
+  const epRows = tab === "topEp" ? topEpisodes(snap.episodeEvents, 10) : tab === "watchedEp" ? mostWatchedEpisodes(snap.episodeEvents, 10) : [];
+  const empty = isEp ? epRows.length === 0 : rows.length === 0;
   return (
     <section>
       <SectionTitle>
@@ -85,11 +98,31 @@ export function RankingsSection({ snap, catalog }: Props) {
         onChange={setTab}
         tabs={[
           ["top", t.community.tabTop],
+          ["topEp", t.community.tabTopEpisodes],
           ["watched", t.community.tabWatched],
+          ["watchedEp", t.community.tabWatchedEpisodes],
         ]}
       />
-      {rows.length === 0 ? (
+      {empty ? (
         <Muted>{t.community.empty}</Muted>
+      ) : isEp ? (
+        <ol className={`${card} grid gap-0.5 p-2`}>
+          {epRows.map((s, i) => {
+            const a = catalog.get(s.animeId);
+            if (!a) return null;
+            return (
+              <RankRow
+                key={`${s.animeId}#${s.episode}`}
+                pos={i + 1}
+                anime={a}
+                title={t.community.episodeOf(s.episode, a.title)}
+                href={`/anime/${a.id}#ep-${s.episode}`}
+                half={tab === "topEp" ? s.avgHalf : null}
+                metric={tab === "topEp" ? t.community.ratings(s.ratings) : t.community.watchers(s.watchers)}
+              />
+            );
+          })}
+        </ol>
       ) : (
         <ol className={`${card} grid gap-0.5 p-2`}>
           {rows.map((s, i) => {

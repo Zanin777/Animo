@@ -48,7 +48,20 @@ export interface DiaryState {
   lists: DiaryList[];
   /** animes que o usuário adicionou ao catálogo */
   customAnime: Anime[];
+  /** nota por episódio: animeId → nº do episódio → meias estrelas 1..10 */
+  episodeRatings: Record<string, Record<string, number>>;
+  /** perfil local (vira a tabela profiles quando houver conta) */
+  profile: LocalProfile;
 }
+
+export interface LocalProfile {
+  displayName: string;
+  /** mesmo formato de profiles.username no banco */
+  handle: string;
+  bio: string;
+}
+
+export const HANDLE_RE = /^[a-z0-9_]{3,20}$/;
 
 export const MAX_FAVORITES = 4;
 
@@ -59,4 +72,6 @@ export const EMPTY_STATE: DiaryState = Object.freeze({
   favorites: [],
   lists: [],
   customAnime: [],
+  episodeRatings: {},
+  profile: { displayName: "", handle: "", bio: "" },
 }) as DiaryState;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import { EpisodeList } from "@/components/EpisodeList";
 import { openLog } from "@/components/LogDrawer";
 import { useState } from "react";
 import { EntryRow } from "@/components/EntryRow";
@@ -136,6 +137,8 @@ export function AnimeView() {
           ))}
         </div>
       )}
+
+      <EpisodeList key={anime.id} anime={anime} />
     </>
   );
 }

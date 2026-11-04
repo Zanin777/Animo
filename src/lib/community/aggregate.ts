@@ -1,6 +1,6 @@
 // Agregações puras sobre os registros da comunidade. No Supabase, as mesmas
 // regras viram SQL (view/materialized view); aqui servem para demo e testes.
-import type { ActivityItem, AnimeStat, CommunityEvent, CommunitySnapshot } from "./types";
+import type { ActivityItem, AnimeStat, CommunityEvent, CommunitySnapshot, EpisodeEvent, EpisodeStat } from "./types";
 
 const WEEK = 7 * 24 * 60;
 /** "Recomenda" = nota 4 estrelas ou mais. */
@@ -65,6 +65,43 @@ export function topRated(events: CommunityEvent[], limit = 10, minRatings = TOP_
 
 export function mostWatched(events: CommunityEvent[], limit = 10): AnimeStat[] {
   return [...statsByAnime(events).values()].sort((a, b) => b.watchers - a.watchers || b.ratings - a.ratings).slice(0, limit);
+}
+
+/** Mínimo de notas para um episódio entrar no Top Episódios. */
+export const TOP_EPISODE_MIN_RATINGS = 3;
+
+export function statsByEpisode(events: EpisodeEvent[]): EpisodeStat[] {
+  const acc = new Map<string, { animeId: string; episode: number; sum: number; ratings: number; users: Set<string> }>();
+  for (const e of events) {
+    const k = `${e.animeId}#${e.episode}`;
+    let a = acc.get(k);
+    if (!a) acc.set(k, (a = { animeId: e.animeId, episode: e.episode, sum: 0, ratings: 0, users: new Set() }));
+    a.users.add(e.user);
+    if (e.ratingHalf !== null) {
+      a.sum += e.ratingHalf;
+      a.ratings++;
+    }
+  }
+  return [...acc.values()].map((a) => ({
+    animeId: a.animeId,
+    episode: a.episode,
+    avgHalf: a.ratings ? a.sum / a.ratings : null,
+    ratings: a.ratings,
+    watchers: a.users.size,
+  }));
+}
+
+export function topEpisodes(events: EpisodeEvent[], limit = 10, minRatings = TOP_EPISODE_MIN_RATINGS): EpisodeStat[] {
+  return statsByEpisode(events)
+    .filter((s) => s.avgHalf !== null && s.ratings >= minRatings)
+    .sort((a, b) => b.avgHalf! - a.avgHalf! || b.ratings - a.ratings)
+    .slice(0, limit);
+}
+
+export function mostWatchedEpisodes(events: EpisodeEvent[], limit = 10): EpisodeStat[] {
+  return statsByEpisode(events)
+    .sort((a, b) => b.watchers - a.watchers || b.ratings - a.ratings || a.episode - b.episode)
+    .slice(0, limit);
 }
 
 /** Prévia do feed: conclusões, notas, reviews e listas, do mais novo ao mais antigo. */

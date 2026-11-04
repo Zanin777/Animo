@@ -37,7 +37,7 @@ describe("agregações da comunidade", () => {
     expect(r[0].friendsWhoRecommend).toBe(1);
   });
   test("atividade do mais recente ao mais antigo, com listas", () => {
-    const items = activity({ demo: false, following: [], events: [ev("a", "x", 8, 30)], lists: [{ id: "l", title: "L", author: "b", animeIds: [], likes: 0, minutesAgo: 5 }] });
+    const items = activity({ demo: false, following: [], episodeEvents: [], events: [ev("a", "x", 8, 30)], lists: [{ id: "l", title: "L", author: "b", animeIds: [], likes: 0, minutesAgo: 5 }] });
     expect(items.map((i) => i.kind)).toEqual(["list", "rated"]);
   });
 });

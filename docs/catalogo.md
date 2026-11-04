@@ -37,3 +37,10 @@ Decisão de 2026-11-04: capa oficial do TMDB onde houver; o pôster tipográfico
 - **Limitação:** o TMDB agrupa temporadas numa série só, então "Season 2" usa a capa da série.
 
 Rodar: `npm run covers` (e `npm run covers -- --retry` para tentar de novo quem não foi achado).
+
+## Temporadas e episódios (TMDB)
+
+- `npm run seasons` (depois de `covers`) descobre a temporada do TMDB de cada série: mesmo ano de estreia, senão o mais próximo; empate → nº de episódios mais próximo. Quando vários animes do catálogo caem na mesma temporada (ex.: *Spy x Family* e *Part 2*; *Jujutsu Kaisen* inteiro numa temporada só), os episódios são divididos em ordem de lançamento. Também troca a capa pela **capa da temporada**. Cache em `tools/tmdb-seasons.json`.
+- A lista de episódios (nome em pt-BR, imagem, data, duração) **não fica no repositório**: a rota `/api/episodes/[id]` busca no TMDB sob demanda, com cache de semanas (`'use cache'` + `cacheLife('weeks')`). Só aceita ids do catálogo; o que vem do TMDB é validado (texto limpo, imagem só como caminho `/xxx.jpg`).
+- **Em produção (Vercel)** é preciso cadastrar `TMDB_READ_TOKEN` nas variáveis de ambiente do projeto. Sem ele, os episódios aparecem só numerados.
+- A nota de cada episódio fica no diário (`episodeRatings`); quando houver banco, vira uma tabela `episode_ratings`.

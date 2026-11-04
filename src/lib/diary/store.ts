@@ -30,7 +30,7 @@ function load() {
     }
     if (raw) {
       const parsed = JSON.parse(raw) as DiaryState;
-      if (parsed?.version === 1) state = { ...EMPTY_STATE, ...parsed };
+      if (parsed?.version === 1) state = { ...EMPTY_STATE, ...parsed, profile: { ...EMPTY_STATE.profile, ...parsed.profile } };
     }
   } catch {
     // armazenamento bloqueado ou corrompido: segue com estado vazio
@@ -119,6 +119,14 @@ export const diary = {
   },
   removeFromList(listId: string, animeId: string) {
     commit(ops.removeFromList(current(), listId, animeId, ctx()));
+  },
+  updateProfile(input: { displayName: string; handle: string; bio: string }) {
+    const r = ops.updateProfile(current(), input);
+    commit(r.state);
+    return r.error;
+  },
+  rateEpisode(animeId: string, episode: number, ratingHalf: number | null) {
+    commit(ops.rateEpisode(current(), animeId, episode, ratingHalf));
   },
   addCustomAnime(input: NewAnimeInput) {
     const r = ops.addCustomAnime(current(), input, ctx());

@@ -10,6 +10,7 @@
 //   - NÃO guarda imagens nem URLs de terceiros
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { applyTmdb } from "./lib/tmdb-merge.mjs";
 import { fileURLToPath } from "node:url";
 
 const SOURCE = {
@@ -146,6 +147,10 @@ for (const a of pool) {
   out.push(item);
   usedIds.add(id);
 }
+
+// ── capas e temporadas do TMDB (caches dos scripts covers/seasons) ──
+const SEASONS_FILE = new URL("tools/tmdb-seasons.json", root);
+applyTmdb(out, COVERS, existsSync(SEASONS_FILE) ? JSON.parse(readFileSync(SEASONS_FILE, "utf8")) : {});
 
 // ── validação final: se algo fugir do schema, nada é gravado ──
 for (const a of out) {

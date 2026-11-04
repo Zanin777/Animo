@@ -1,7 +1,7 @@
 // Regras do diário como funções puras: estado entra, estado novo sai.
 // Fáceis de testar e iguais às regras que o banco vai validar depois.
 import type { Anime, NewAnimeInput } from "@/lib/catalog/provider";
-import { MAX_FAVORITES, type DiaryState, type Entry, type WatchStatus } from "./types";
+import { HANDLE_RE, MAX_FAVORITES, type DiaryState, type Entry, type WatchStatus } from "./types";
 
 export interface Ctx {
   now: string; // ISO
@@ -159,6 +159,37 @@ export function removeFromList(s: DiaryState, listId: string, animeId: string, c
   };
 }
 
+export type ProfileError = "handle" | "displayName" | "bio";
+
+/** Atualiza o perfil local com as mesmas regras do banco (profiles). */
+export function updateProfile(
+  s: DiaryState,
+  input: { displayName: string; handle: string; bio: string },
+): { state: DiaryState; error: ProfileError | null } {
+  const displayName = input.displayName.trim();
+  const handle = input.handle.trim().toLowerCase().replace(/^@/, "");
+  const bio = input.bio.trim();
+  if (handle && !HANDLE_RE.test(handle)) return { state: s, error: "handle" };
+  if (displayName.length > 50) return { state: s, error: "displayName" };
+  if (bio.length > 300) return { state: s, error: "bio" };
+  return { state: { ...s, profile: { displayName, handle, bio } }, error: null };
+}
+
+/** Nota de um episódio (1..10); null tira a nota. */
+export function rateEpisode(s: DiaryState, animeId: string, episode: number, ratingHalf: number | null): DiaryState {
+  if (!Number.isInteger(episode) || episode < 1 || episode > 5000) throw new RangeError("episódio inválido");
+  if (ratingHalf !== null && !(Number.isInteger(ratingHalf) && ratingHalf >= 1 && ratingHalf <= 10)) {
+    throw new RangeError("ratingHalf deve ser 1..10 ou null");
+  }
+  const forAnime = { ...(s.episodeRatings[animeId] ?? {}) };
+  if (ratingHalf === null) delete forAnime[episode];
+  else forAnime[episode] = ratingHalf;
+  const episodeRatings = { ...s.episodeRatings };
+  if (Object.keys(forAnime).length) episodeRatings[animeId] = forAnime;
+  else delete episodeRatings[animeId];
+  return { ...s, episodeRatings };
+}
+
 export function addCustomAnime(s: DiaryState, input: NewAnimeInput, ctx: Ctx): { state: DiaryState; anime: Anime } {
   const title = input.title.trim();
   if (!title) throw new Error("título obrigatório");
@@ -172,6 +203,7 @@ export function addCustomAnime(s: DiaryState, input: NewAnimeInput, ctx: Ctx): {
     episodes: input.episodes ?? null,
     cover: null,
     genres: [],
+    tmdb: null,
     isVerified: false,
   };
   return { anime, state: { ...s, customAnime: [...s.customAnime, anime] } };

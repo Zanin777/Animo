@@ -75,14 +75,28 @@ export function TrendingCard({ anime, stat, extra }: { anime: Anime; stat: Anime
 }
 
 /** Linha de ranking: posição, miniatura, nome, métrica. */
-export function RankRow({ pos, anime, metric, half }: { pos: number; anime: Anime; metric: string; half?: number | null }) {
+export function RankRow({
+  pos,
+  anime,
+  metric,
+  half,
+  title,
+  href,
+}: {
+  pos: number;
+  anime: Anime;
+  metric: string;
+  half?: number | null;
+  title?: string;
+  href?: string;
+}) {
   return (
     <li>
-      <Link href={`/anime/${anime.id}`} className="grid grid-cols-[28px_40px_1fr_auto] items-center gap-3 rounded-lg p-1.5 hover:bg-card">
+      <Link href={href ?? `/anime/${anime.id}`} className="grid grid-cols-[28px_40px_1fr_auto] items-center gap-3 rounded-lg p-1.5 hover:bg-card">
         <span className={`text-center font-display ${pos <= 3 ? "text-xl text-accent" : "text-muted"}`}>{pos}</span>
         <Poster anime={anime} size="xs" />
         <span className="min-w-0">
-          <span className="block truncate font-bold">{anime.title}</span>
+          <span className="block truncate font-bold">{title ?? anime.title}</span>
           <span className="block text-xs text-muted">{metric}</span>
         </span>
         {half != null ? <span className="font-display text-accent">{formatRating(Math.round(half))}</span> : <span />}
