@@ -7,10 +7,14 @@ import { buildDemoSnapshot } from "./demo";
 import type { CommunitySnapshot } from "./types";
 
 /**
- * Demonstração só em desenvolvimento (`npm run dev`). Em produção as seções
- * da comunidade mostram estado vazio até existirem dados reais (Supabase).
+ * Dados de demonstração (inventados, marcados "demonstração"):
+ * - ligados por padrão no `npm run dev`;
+ * - em produção só com NEXT_PUBLIC_COMMUNITY_DEMO=1 (ex.: para mostrar o layout na Vercel);
+ * - NEXT_PUBLIC_COMMUNITY_DEMO=0 desliga também no dev.
+ * Sem demo e sem dados reais, o Início mostra destaques do catálogo.
  */
-export const COMMUNITY_DEMO = process.env.NODE_ENV === "development";
+const FLAG = process.env.NEXT_PUBLIC_COMMUNITY_DEMO;
+export const COMMUNITY_DEMO = FLAG === "1" || (FLAG !== "0" && process.env.NODE_ENV === "development");
 
 const EMPTY: CommunitySnapshot = { demo: false, events: [], episodeEvents: [], following: [], lists: [] };
 

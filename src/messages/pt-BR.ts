@@ -73,6 +73,9 @@ export const ptBR = {
   },
   home: {
     title: "Início",
+    highlightsTitle: "Destaques do catálogo",
+    recentTitle: "Lançamentos recentes",
+    rankingsSoon: "Os rankings aparecem quando a comunidade começar a avaliar. Registre os seus animes e seja dos primeiros!",
     watchingTitle: "Assistindo agora",
     plusOne: "+1 ep",
     episodeOf: (n: number, total: number | null) => (total ? `ep ${n} de ${total}` : `ep ${n}`),
@@ -123,6 +126,14 @@ export const ptBR = {
     favoritesFull: "Você já tem 4 favoritos. Tire um no perfil para trocar.",
     addToList: "Adicionar a uma lista",
     notFound: "Anime não encontrado.",
+  },
+  seasons: {
+    title: "Temporadas",
+    short: (n: number, part: number | null) => (part ? `T${n} · P${part}` : `T${n}`),
+    long: (n: number, part: number | null) => (part ? `Temporada ${n} · Parte ${part}` : `Temporada ${n}`),
+    eps: (n: number | null) => (n ? `${n} ep.` : ""),
+    open: "Abrir página da temporada",
+    here: "esta página",
   },
   episodes: {
     title: "Episódios",

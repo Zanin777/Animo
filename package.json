@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "covers": "node --env-file=.env.local tools/fetch-covers.mjs",
-    "seasons": "node --env-file=.env.local tools/fetch-seasons.mjs"
+    "seasons": "node --env-file=.env.local tools/fetch-seasons.mjs",
+    "fill-seasons": "node --env-file=.env.local tools/fill-seasons.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

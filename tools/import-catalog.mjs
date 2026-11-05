@@ -10,6 +10,7 @@
 //   - NÃO guarda imagens nem URLs de terceiros
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { buildExtraSeasons } from "./lib/extra-seasons.mjs";
 import { applyTmdb } from "./lib/tmdb-merge.mjs";
 import { fileURLToPath } from "node:url";
 
@@ -151,11 +152,14 @@ for (const a of pool) {
 // ── capas e temporadas do TMDB (caches dos scripts covers/seasons) ──
 const SEASONS_FILE = new URL("tools/tmdb-seasons.json", root);
 applyTmdb(out, COVERS, existsSync(SEASONS_FILE) ? JSON.parse(readFileSync(SEASONS_FILE, "utf8")) : {});
+// temporadas que o TMDB tem e o catálogo não (tools/fill-seasons.mjs)
+const SHOWS_FILE = new URL("tools/tmdb-shows.json", root);
+if (existsSync(SHOWS_FILE)) out.push(...buildExtraSeasons(out, JSON.parse(readFileSync(SHOWS_FILE, "utf8"))));
 
 // ── validação final: se algo fugir do schema, nada é gravado ──
 for (const a of out) {
   const ok =
-    /^[a-z0-9-]{1,70}$/.test(a.id) &&
+    /^[a-z0-9-]{1,80}$/.test(a.id) &&
     a.title.length >= 1 && a.title.length <= 200 &&
     a.aliases.every((s) => s.length <= 100 && !HAS_UNSAFE.test(s)) &&
     !HAS_UNSAFE.test(a.title) &&

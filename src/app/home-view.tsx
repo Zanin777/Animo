@@ -9,12 +9,24 @@ import { useCatalog } from "@/lib/catalog/local";
 import { useCommunity } from "@/lib/community";
 import { diary, useDiary } from "@/lib/diary/store";
 import { t } from "@/messages";
-import { ActivitySection, CoverMarquee, FeaturedListsSection, RankingsSection, TrendingSection } from "./home-sections";
+import { useCurrentYear } from "@/lib/use-current-year";
+import {
+  ActivitySection,
+  CatalogHighlights,
+  CoverMarquee,
+  FeaturedListsSection,
+  RankingsSection,
+  RecentReleases,
+  TrendingSection,
+  marqueeItems,
+} from "./home-sections";
 
 export function HomeView() {
   const state = useDiary();
   const catalog = useCatalog();
   const snap = useCommunity();
+  const year = useCurrentYear();
+  const hasCommunity = snap.events.length > 0;
 
   const watching = Object.values(state.library)
     .filter((l) => l.status === "watching")
@@ -35,7 +47,7 @@ export function HomeView() {
         <span className="hidden md:inline">{t.home.title}</span>
       </PageTitle>
 
-      <CoverMarquee snap={snap} catalog={catalog} />
+      {catalog.ready && <CoverMarquee items={marqueeItems(snap, catalog)} />}
 
       {watching.length > 0 && (
         <>
@@ -62,12 +74,21 @@ export function HomeView() {
         </>
       )}
 
-      {snap.ready && (
+      {snap.ready && hasCommunity && (
         <>
           <TrendingSection snap={snap} catalog={catalog} />
           <RankingsSection snap={snap} catalog={catalog} />
           <ActivitySection snap={snap} catalog={catalog} />
           <FeaturedListsSection snap={snap} catalog={catalog} />
+        </>
+      )}
+      {snap.ready && !hasCommunity && (
+        <>
+          {/* comunidade ainda vazia: catálogo de verdade, sem números inventados */}
+          <CatalogHighlights catalog={catalog} />
+          <RecentReleases catalog={catalog} year={year} />
+          <SectionTitle>{t.community.rankingsTitle}</SectionTitle>
+          <Muted>{t.home.rankingsSoon}</Muted>
         </>
       )}
 

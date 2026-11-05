@@ -56,12 +56,13 @@ export function Genres({ anime }: { anime: Anime }) {
 }
 
 /** Card do "Em alta": capa, nome, nota média, gêneros, nº de avaliações. */
-export function TrendingCard({ anime, stat, extra }: { anime: Anime; stat: AnimeStat; extra?: ReactNode }) {
+/** stat ausente = destaque do catálogo (sem notas da comunidade): mostra ano e formato. */
+export function TrendingCard({ anime, stat, extra }: { anime: Anime; stat?: AnimeStat; extra?: ReactNode }) {
   return (
     <Link href={`/anime/${anime.id}`} className="poster-link w-36 flex-none snap-start sm:w-40" aria-label={anime.title}>
       <div className="poster-lift relative">
         <Poster anime={anime} />
-        {stat.avgHalf !== null && (
+        {stat && stat.avgHalf !== null && (
           <span className="absolute -right-1.5 -bottom-2 z-10 rounded-full bg-bg">
             <Hanko half={Math.round(stat.avgHalf)} size="sm" />
           </span>
@@ -69,7 +70,9 @@ export function TrendingCard({ anime, stat, extra }: { anime: Anime; stat: Anime
       </div>
       <h3 className="mt-2.5 truncate text-sm font-bold">{anime.title}</h3>
       <Genres anime={anime} />
-      <p className="text-xs text-muted">{extra ?? t.community.ratings(stat.ratings)}</p>
+      <p className="text-xs text-muted">
+        {extra ?? (stat ? t.community.ratings(stat.ratings) : [anime.year, t.kind[anime.kind]].filter(Boolean).join(" · "))}
+      </p>
     </Link>
   );
 }

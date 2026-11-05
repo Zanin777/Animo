@@ -9,7 +9,7 @@ const UNSAFE = /[\u0000-\u001f\u007f-\u009f​-‏‪-‮⁠-⁩﻿]/g;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const byId = new Map((generated.anime as CatalogRow[]).map((a) => [a.id, a]));
 
-export const ANIME_ID = /^[a-z0-9-]{1,70}$/;
+export const ANIME_ID = /^[a-z0-9-]{1,80}$/; // mesmo limite de anime.id no banco
 
 type TmdbEpisode = { episode_number?: unknown; name?: unknown; still_path?: unknown; air_date?: unknown; runtime?: unknown };
 

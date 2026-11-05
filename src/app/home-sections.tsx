@@ -8,6 +8,7 @@ import { Poster } from "@/components/Poster";
 import { Muted, SectionTitle, btnGhost, card } from "@/components/ui";
 import type { Anime } from "@/lib/catalog/provider";
 import type { LocalCatalog } from "@/lib/catalog/local";
+import { FEATURED_IDS } from "@/lib/catalog/seed";
 import {
   activity,
   mostWatched,
@@ -22,11 +23,8 @@ import { t } from "@/messages";
 
 type Props = { snap: CommunitySnapshot; catalog: LocalCatalog };
 
-/** Capas passando no topo (os mais em alta). Pausa ao passar o mouse. */
-export function CoverMarquee({ snap, catalog }: Props) {
-  const items = trending(snap.events, 14)
-    .map((s) => catalog.get(s.animeId))
-    .filter((a): a is Anime => a !== null);
+/** Capas passando no topo. Pausa ao passar o mouse. */
+export function CoverMarquee({ items }: { items: Anime[] }) {
   if (items.length < 6) return null;
   return (
     <div className="marquee -mx-4 mb-2 overflow-hidden px-4 py-4" aria-label={t.community.trendingTitle}>
@@ -38,6 +36,52 @@ export function CoverMarquee({ snap, catalog }: Props) {
         ))}
       </div>
     </div>
+  );
+}
+
+/** Os mais em alta (comunidade); sem atividade, os destaques do catálogo. */
+export function marqueeItems(snap: CommunitySnapshot, catalog: LocalCatalog): Anime[] {
+  const fromCommunity = trending(snap.events, 14).map((s) => catalog.get(s.animeId));
+  const list = fromCommunity.length >= 6 ? fromCommunity : FEATURED_IDS.map(catalog.get);
+  return list.filter((a): a is Anime => a !== null);
+}
+
+/** Sem atividade da comunidade ainda: animes de verdade do catálogo, sem notas inventadas. */
+export function CatalogHighlights({ catalog }: { catalog: LocalCatalog }) {
+  const items = FEATURED_IDS.map(catalog.get).filter((a): a is Anime => a !== null);
+  if (!items.length) return null;
+  return (
+    <section>
+      <SectionTitle>{t.home.highlightsTitle}</SectionTitle>
+      <div className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pt-3 pb-3">
+        {items.map((a) => (
+          <TrendingCard key={a.id} anime={a} />
+        ))}
+      </div>
+      <Link href="/buscar" className={`${btnGhost} mt-3`}>
+        {t.community.seeCatalog} →
+      </Link>
+    </section>
+  );
+}
+
+/** Os mais novos do catálogo (até o ano atual), com capa. */
+export function RecentReleases({ catalog, year }: { catalog: LocalCatalog; year: number | null }) {
+  if (year === null) return null;
+  const items = catalog.all
+    .filter((a) => a.year !== null && a.year <= year && a.year >= year - 1 && a.cover)
+    .sort((a, b) => (b.year ?? 0) - (a.year ?? 0) || a.title.localeCompare(b.title))
+    .slice(0, 12);
+  if (!items.length) return null;
+  return (
+    <section>
+      <SectionTitle>{t.home.recentTitle}</SectionTitle>
+      <div className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pt-3 pb-3">
+        {items.map((a) => (
+          <TrendingCard key={a.id} anime={a} />
+        ))}
+      </div>
+    </section>
   );
 }
 
