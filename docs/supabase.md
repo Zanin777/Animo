@@ -5,7 +5,7 @@
 1. **Projeto:** supabase.com → New project (`aniora`, região South America / São Paulo).
 2. **Chaves:** Project Settings → API Keys → copie a *Project URL* e a *publishable key* para o `.env.local` (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`). A chave secreta não entra no app.
 3. **Schema:** SQL Editor → cole `supabase/migrations/0001_core.sql` inteiro → Run.
-4. **Catálogo:** SQL Editor → cole e rode, um de cada vez, `supabase/seed/anime-1.sql` … `anime-4.sql` (2.000 animes). Para regenerar depois de mudar o catálogo: `node tools/build-seed-sql.mjs`.
+4. **Catálogo:** SQL Editor → cole e rode, um de cada vez, `supabase/seed/anime-1.sql` … `anime-5.sql` (2.350 animes e temporadas). Para regenerar depois de mudar o catálogo: `node tools/build-seed-sql.mjs`.
 5. **Login:** Authentication → URL Configuration
    - Site URL: `http://localhost:3000` (em produção, o domínio do site)
    - Redirect URLs: `http://localhost:3000/auth/callback` (e o mesmo no domínio de produção)
