@@ -2,15 +2,19 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { Tabs } from "@/components/community";
 import { Hanko } from "@/components/Hanko";
 import { Poster } from "@/components/Poster";
 import { SlidingNumber } from "@/components/SlidingNumber";
-import { AnimeTile, Muted, PosterGrid, SectionTitle, card } from "@/components/ui";
+import { AnimePicker } from "@/components/AnimePicker";
+import { IconPlus } from "@/components/Icons";
+import { AnimeTile, Muted, PosterGrid, SectionTitle, card, rows } from "@/components/ui";
 import type { Anime } from "@/lib/catalog/provider";
 import { useCatalog } from "@/lib/catalog/local";
 import { computeStats } from "@/lib/diary/stats";
-import { useDiary } from "@/lib/diary/store";
-import { MAX_FAVORITES, type Entry, type WatchStatus } from "@/lib/diary/types";
+import { diary, useDiary } from "@/lib/diary/store";
+import { MAX_FAVORITES, type DiaryState, type Entry, type WatchStatus } from "@/lib/diary/types";
+import { accentStyle } from "@/lib/profile/accents";
 import { formatRating } from "@/lib/rating";
 import { useCurrentYear } from "@/lib/use-current-year";
 import { t } from "@/messages";
@@ -21,8 +25,13 @@ const TABS: WatchStatus[] = ["watched", "watching", "want"];
 const byNewest = (a: Entry, b: Entry) => b.watchedOn.localeCompare(a.watchedOn) || b.createdAt.localeCompare(a.createdAt);
 
 export function ProfileView() {
-  const state = useDiary();
+  return <ProfileBody state={useDiary()} />;
+}
+
+/** Corpo do perfil. readOnly = perfil público de alguém (sem editar, sem favoritar). */
+export function ProfileBody({ state, readOnly = false }: { state: DiaryState; readOnly?: boolean }) {
   const catalog = useCatalog();
+  const [picking, setPicking] = useState(false);
   const stats = computeStats(state, useCurrentYear());
   const [tab, setTab] = useState<WatchStatus>("watched");
 
@@ -53,11 +62,27 @@ export function ProfileView() {
     .filter((a): a is Anime => a !== null);
 
   const maxBar = Math.max(1, ...stats.distribution);
+
+  // coluna ao lado do topo: gêneros mais vistos (vistos + assistindo) e o que está assistindo
+  const seen = Object.values(state.library).filter((l) => l.status !== "want");
+  const genreCount = new Map<string, number>();
+  for (const l of seen) for (const g of catalog.get(l.animeId)?.genres ?? []) genreCount.set(g, (genreCount.get(g) ?? 0) + 1);
+  const side = {
+    genres: [...genreCount].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 5).map(([g]) => g),
+    watching: seen
+      .filter((l) => l.status === "watching")
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+      .slice(0, 3)
+      .map((l) => catalog.get(l.animeId))
+      .filter((a): a is Anime => a !== null),
+  };
   const backdrop = favorites.length ? favorites : recent.map((e) => catalog.get(e.animeId)).filter((a): a is Anime => a !== null);
 
   return (
-    <>
+    <div style={accentStyle(state.profile.accent)}>
       <ProfileHeader
+        readOnly={readOnly}
+        side={side}
         profile={state.profile}
         backdrop={backdrop}
         stats={[
@@ -68,22 +93,61 @@ export function ProfileView() {
         ]}
       />
 
-      {/* favoritos: 4 grandes, numerados com selo */}
+      {/* favoritos: 4 grandes, numerados com selo; vazio = "+" para escolher */}
       <SectionTitle>{t.profile.favorites}</SectionTitle>
       <div className="grid grid-cols-4 gap-3">
         {Array.from({ length: MAX_FAVORITES }, (_, i) => {
           const a = favorites[i];
           return (
-            <div key={a?.id ?? `vazio-${i}`} className="relative">
+            <div key={a?.id ?? `vazio-${i}`} className="group relative">
               <span className="absolute -top-2 -left-2 z-10 grid h-7 w-7 -rotate-6 place-items-center rounded-full border-2 border-accent bg-bg font-display text-xs text-accent">
                 {i + 1}
               </span>
-              {a ? <AnimeTile anime={a} /> : <div className="aspect-[2/3] rounded-lg border border-dashed border-line" />}
+              {a ? (
+                <>
+                  <AnimeTile anime={a} />
+                  {!readOnly && (
+                    <button
+                      type="button"
+                      onClick={() => diary.toggleFavorite(a.id)}
+                      className="absolute -top-2 -right-2 z-10 grid h-7 w-7 cursor-pointer place-items-center rounded-full border border-line bg-bg text-sm text-muted transition-opacity hover:text-fg sm:opacity-0 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100"
+                      aria-label={`${t.profile.removeFavorite}: ${a.title}`}
+                      title={t.profile.removeFavorite}
+                    >
+                      ×
+                    </button>
+                  )}
+                </>
+              ) : readOnly ? (
+                <div className="aspect-[2/3] rounded-lg border border-dashed border-line" />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setPicking(true)}
+                  className="press grid aspect-[2/3] w-full cursor-pointer place-items-center rounded-lg border border-dashed border-line text-muted transition-colors hover:border-accent hover:text-accent"
+                  aria-label={t.profile.addFavorite}
+                  title={t.profile.addFavorite}
+                >
+                  <IconPlus size={28} />
+                </button>
+              )}
             </div>
           );
         })}
       </div>
-      {favorites.length === 0 && <Muted className="mt-2">{t.profile.favoritesEmpty}</Muted>}
+      {!readOnly && favorites.length === 0 && <Muted className="mt-2">{t.profile.favoritesEmpty}</Muted>}
+      {!readOnly && (
+        <AnimePicker
+          open={picking}
+          title={t.profile.pickFavorite}
+          exclude={state.favorites}
+          onClose={() => setPicking(false)}
+          onPick={(a) => {
+            diary.toggleFavorite(a.id);
+            setPicking(false);
+          }}
+        />
+      )}
 
       {/* atividade recente: capa + nota embaixo */}
       <SectionTitle>{t.profile.recent}</SectionTitle>
@@ -114,14 +178,14 @@ export function ProfileView() {
       {bestEpisodes.length === 0 ? (
         <Muted>{t.profile.bestEpisodesEmpty}</Muted>
       ) : (
-        <ol className={`${card} grid gap-0.5 p-2`}>
+        <ol className={rows}>
           {bestEpisodes.map((b, i) => {
             const a = catalog.get(b.animeId);
             if (!a) return null;
             return (
               <li key={`${b.animeId}#${b.ep}`}>
-                <Link href={`/anime/${a.id}#ep-${b.ep}`} className="grid grid-cols-[24px_36px_1fr_auto] items-center gap-3 rounded-lg p-1.5 hover:bg-bg">
-                  <span className="text-center font-display text-muted">{i + 1}</span>
+                <Link href={`/anime/${a.id}#ep-${b.ep}`} className="grid grid-cols-[24px_36px_1fr_auto] items-center gap-3 py-2.5 transition-colors hover:bg-card">
+                  <span className="text-center font-display text-muted tabular-nums">{i + 1}</span>
                   <Poster anime={a} size="xs" />
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-bold">{t.community.episodeOf(b.ep, a.title)}</span>
@@ -177,14 +241,14 @@ export function ProfileView() {
                   <h3 className="mb-2 text-sm font-bold text-muted">
                     {t.monthsLong[m - 1]} {y}
                   </h3>
-                  <ul className={`${card} divide-y divide-line`}>
+                  <ul className={rows}>
                     {list.map((e) => {
                       const a = catalog.get(e.animeId);
                       if (!a) return null;
                       return (
                         <li key={e.id}>
-                          <Link href={`/anime/${a.id}`} className="grid grid-cols-[32px_28px_1fr_auto] items-center gap-3 px-3 py-2 hover:bg-bg">
-                            <span className="text-center font-display text-lg text-muted">{Number(e.watchedOn.slice(8, 10))}</span>
+                          <Link href={`/anime/${a.id}`} className="grid grid-cols-[32px_28px_1fr_auto] items-center gap-3 py-2.5 transition-colors hover:bg-card">
+                            <span className="text-center font-display text-lg text-muted tabular-nums">{Number(e.watchedOn.slice(8, 10))}</span>
                             <Poster anime={a} size="xs" />
                             <span className="min-w-0 truncate text-sm">
                               {a.title}
@@ -205,20 +269,12 @@ export function ProfileView() {
 
       {/* biblioteca */}
       <SectionTitle>{t.profile.library}</SectionTitle>
-      <div className="mb-4 flex gap-2" role="tablist" aria-label={t.profile.library}>
-        {TABS.map((s) => (
-          <button
-            key={s}
-            type="button"
-            role="tab"
-            aria-selected={tab === s}
-            onClick={() => setTab(s)}
-            className={`cursor-pointer rounded-full border px-3 py-1 text-sm ${tab === s ? "border-accent font-bold text-accent" : "border-line"}`}
-          >
-            {t.status[s]}
-          </button>
-        ))}
-      </div>
+      <Tabs
+        label={t.profile.library}
+        value={tab}
+        onChange={setTab}
+        tabs={TABS.map((s) => [s, t.status[s]] as [WatchStatus, string])}
+      />
       {shelf.length === 0 ? (
         <Muted>—</Muted>
       ) : (
@@ -235,11 +291,11 @@ export function ProfileView() {
           <SectionTitle>{t.profile.myLists}</SectionTitle>
           <div className="grid gap-2 sm:grid-cols-2">
             {state.lists.slice(0, 4).map((l) => (
-              <Link key={l.id} href={`/listas/${l.id}`} className={`${card} flex items-center gap-3 p-3 hover:border-fg`}>
+              <Link key={l.id} href={`/listas/${l.id}`} className="flex items-center gap-3 rounded-md py-1 transition-colors hover:bg-card">
                 <div className="flex w-20 flex-none -space-x-6">
                   {l.items.slice(0, 3).map((i) => {
                     const a = catalog.get(i.animeId);
-                    return a ? <Poster key={i.animeId} anime={a} size="xs" className="w-10 ring-2 ring-card" /> : null;
+                    return a ? <Poster key={i.animeId} anime={a} size="xs" className="w-10 ring-2 ring-bg" /> : null;
                   })}
                 </div>
                 <div className="min-w-0">
@@ -257,7 +313,7 @@ export function ProfileView() {
         </>
       )}
 
-      <Muted className="mt-10 text-xs">{t.profile.localNotice}</Muted>
-    </>
+      {!readOnly && <Muted className="mt-10 text-xs">{t.profile.localNotice}</Muted>}
+    </div>
   );
 }

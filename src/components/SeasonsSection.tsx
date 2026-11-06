@@ -45,12 +45,12 @@ export function SeasonsSection({ anime }: { anime: Anime }) {
               aria-selected={on}
               aria-label={t.seasons.long(s.season, s.part)}
               onClick={() => setSelectedId(s.anime.id)}
-              className={`flex w-20 flex-none cursor-pointer snap-start flex-col items-stretch gap-1.5 rounded-xl border p-1.5 text-left transition-colors sm:w-24 ${
-                on ? "border-accent bg-card" : "border-line hover:border-fg"
+              className={`press flex w-20 flex-none cursor-pointer snap-start flex-col items-stretch gap-1.5 rounded-md p-1 text-left transition-colors sm:w-24 ${
+                on ? "bg-card" : "hover:bg-card"
               }`}
             >
-              <Poster anime={s.anime} size="xs" className={on ? "" : "opacity-70"} />
-              <span className={`text-xs leading-tight ${on ? "font-bold text-accent" : ""}`}>{t.seasons.short(s.season, s.part)}</span>
+              <Poster anime={s.anime} size="xs" className={on ? "outline-2 outline-offset-2 outline-accent" : "opacity-60"} />
+              <span className={`text-xs leading-tight ${on ? "font-bold text-fg" : "text-muted"}`}>{t.seasons.short(s.season, s.part)}</span>
               <span className="text-[10px] leading-tight text-muted">
                 {t.seasons.eps(s.anime.episodes)}
                 {rated > 0 && ` · ★${rated}`}

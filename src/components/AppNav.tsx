@@ -4,7 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { MouseEvent } from "react";
 import { t } from "@/messages";
+import { IconHome, IconLists, IconPlus, IconProfile, IconSearch } from "./Icons";
 import { openLog } from "./LogDrawer";
+import { ThemeSwitch } from "./ThemeSwitch";
 
 /** O + abre a gaveta; o href continua como reserva (abrir em nova aba, sem JS). */
 function onLogClick(e: MouseEvent) {
@@ -14,11 +16,11 @@ function onLogClick(e: MouseEvent) {
 }
 
 const ITEMS = [
-  { href: "/", label: t.nav.home, icon: "⌂" },
-  { href: "/buscar", label: t.nav.search, icon: "⌕" },
-  { href: "/registrar", label: t.nav.log, icon: "+", primary: true },
-  { href: "/listas", label: t.nav.lists, icon: "☰" },
-  { href: "/perfil", label: t.nav.profile, icon: "◯" },
+  { href: "/", label: t.nav.home, Icon: IconHome },
+  { href: "/buscar", label: t.nav.search, Icon: IconSearch },
+  { href: "/registrar", label: t.nav.log, Icon: IconPlus, primary: true },
+  { href: "/listas", label: t.nav.lists, Icon: IconLists },
+  { href: "/perfil", label: t.nav.profile, Icon: IconProfile },
 ] as const;
 
 function isActive(path: string | null, href: string) {
@@ -36,7 +38,7 @@ export function NavShell({ path }: { path: string | null }) {
   return (
     <>
       {/* desktop: navbar no topo */}
-      <header className="sticky top-0 z-20 hidden border-b border-line bg-bg/90 backdrop-blur md:block">
+      <header className="sticky top-0 z-20 hidden border-b border-line bg-bg md:block">
         <nav className="mx-auto flex max-w-3xl items-center gap-6 px-4 py-3">
           <Link href="/" className="mr-auto font-display text-2xl leading-none">
             aniora<span className="text-accent">.</span>
@@ -47,8 +49,9 @@ export function NavShell({ path }: { path: string | null }) {
                 key={it.href}
                 href={it.href}
                 onClick={onLogClick}
-                className="rounded-full bg-accent px-4 py-1.5 text-sm font-bold text-white hover:bg-accent-ink"
+                className="press inline-flex items-center gap-1 rounded-md bg-accent py-1.5 pr-3.5 pl-2.5 text-sm font-bold text-white hover:bg-accent-ink"
               >
+                <it.Icon size={16} strokeWidth={2.25} />
                 {it.label}
               </Link>
             ) : (
@@ -56,18 +59,20 @@ export function NavShell({ path }: { path: string | null }) {
                 key={it.href}
                 href={it.href}
                 aria-current={isActive(path, it.href) ? "page" : undefined}
-                className={`text-sm ${isActive(path, it.href) ? "font-bold text-accent" : "text-muted hover:text-fg"}`}
+                className={`text-sm underline-offset-[6px] transition-colors ${isActive(path, it.href) ? "text-fg underline decoration-accent decoration-2" : "text-muted hover:text-fg"}`}
               >
                 {it.label}
               </Link>
             ),
           )}
+          <span className="-mx-2 h-5 w-px bg-line" aria-hidden="true" />
+          <ThemeSwitch />
         </nav>
       </header>
 
       {/* celular: barra inferior */}
       <nav
-        className="fixed inset-x-0 bottom-0 z-20 flex justify-around border-t border-line bg-card pt-2 text-xs md:hidden"
+        className="fixed inset-x-0 bottom-0 z-20 flex justify-around border-t border-line bg-bg pt-1.5 text-[11px] md:hidden"
         style={{ paddingBottom: "calc(8px + env(safe-area-inset-bottom))" }}
       >
         {ITEMS.map((it) => {
@@ -78,14 +83,16 @@ export function NavShell({ path }: { path: string | null }) {
               href={it.href}
               onClick={"primary" in it ? onLogClick : undefined}
               aria-current={active ? "page" : undefined}
-              className={`grid justify-items-center gap-0.5 ${active ? "font-bold text-accent" : "text-muted"}`}
+              className={`press grid min-w-14 justify-items-center gap-0.5 ${active ? "font-bold text-fg" : "text-muted"}`}
             >
               {"primary" in it ? (
-                <i className="-mt-3.5 grid h-[34px] w-[34px] place-items-center rounded-full bg-accent text-lg not-italic text-white">
-                  {it.icon}
-                </i>
+                <span className="grid h-[30px] w-[42px] place-items-center rounded-md bg-accent text-white">
+                  <it.Icon size={20} strokeWidth={2.25} />
+                </span>
               ) : (
-                <i className="text-lg leading-6 not-italic">{it.icon}</i>
+                <span className="relative grid h-[30px] place-items-center">
+                  <it.Icon size={22} className={active ? "text-accent" : undefined} />
+                </span>
               )}
               {it.label}
             </Link>

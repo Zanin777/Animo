@@ -9,3 +9,4 @@ node_modules
 *.log
 # caches dos scripts do TMDB (o catálogo já vem pronto em src/lib/catalog)
 tools/tmdb-*.json
+supabase/.temp

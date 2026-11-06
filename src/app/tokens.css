@@ -1,6 +1,8 @@
 /* Aniora — design tokens (Tailwind v4).
-   Direção de arte APROVADA em 2026-11-04: valores idênticos a docs/estilo.html.
-   Mudou aqui, muda lá. As fontes vêm de next/font (layout.tsx). */
+   Identidade aprovada em 2026-11-04 (carmesim, Dela Gothic + Zen Kaku, selo hanko,
+   pôster tipográfico). Repaginada em 2026-11-05: neutros com leve tom de anil
+   (tinta sumi / tecido aizome) em vez de preto e creme "de fábrica"; o carmesim
+   fica para nota, ação principal e item ativo. As fontes vêm de next/font (layout.tsx). */
 
 @theme inline {
   --font-display: var(--font-dela), system-ui, sans-serif; /* títulos, selo, pôsteres */
@@ -18,43 +20,43 @@
   /* paleta crua */
   --color-crimson: #c41e3a;
   --color-crimson-ink: #9e1830;
-  --color-paper: #f7f4ee;
-  --color-ink: #1a1717;
+  --color-paper: #f3f1ec;
+  --color-ink: #1c1e25;
 
-  --radius-card: 0.75rem;
+  --radius-card: 0.5rem;
 }
 
 :root {
-  --bg: #f7f4ee;
-  --fg: #1a1717;
-  --muted: #6b6461;
-  --line: #e3ddd3;
-  --card: #fffdf9;
-  --accent: #c41e3a;
+  --bg: #f3f1ec;      /* papel washi */
+  --fg: #1c1e25;      /* tinta com fundo anil */
+  --muted: #65625c;
+  --line: #dedad1;
+  --card: #fbfaf7;
+  --accent: #c41e3a;  /* carmesim do selo */
   --accent-ink: #9e1830;
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #121011;
-    --fg: #f1ece4;
-    --muted: #a39b95;
-    --line: #2a2526;
-    --card: #1b1819;
-    --accent: #e0334f;
-    --accent-ink: #f0566f;
+    --bg: #14161c;    /* tinta sumi com anil, não preto puro */
+    --fg: #e9e4da;    /* papel sob luz baixa */
+    --muted: #9a958d;
+    --line: #272a33;
+    --card: #1a1d24;
+    --accent: #e0445a;
+    --accent-ink: #ec6276;
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #121011;
-  --fg: #f1ece4;
-  --muted: #a39b95;
-  --line: #2a2526;
-  --card: #1b1819;
-  --accent: #e0334f;
-  --accent-ink: #f0566f;
+  --bg: #14161c;    /* tinta sumi com anil, não preto puro */
+  --fg: #e9e4da;    /* papel sob luz baixa */
+  --muted: #9a958d;
+  --line: #272a33;
+  --card: #1a1d24;
+  --accent: #e0445a;
+  --accent-ink: #ec6276;
   color-scheme: dark;
 }

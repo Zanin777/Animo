@@ -3,6 +3,7 @@
 import { useSyncExternalStore } from "react";
 import { THEME_KEY } from "@/lib/theme";
 import { t } from "@/messages";
+import { IconMonitor, IconMoon, IconSun } from "./Icons";
 
 type Theme = "light" | "dark" | "system";
 
@@ -27,27 +28,29 @@ function apply(theme: Theme) {
   listeners.forEach((l) => l());
 }
 
+const OPTIONS = [
+  ["light", t.profile.themeLight, IconSun],
+  ["dark", t.profile.themeDark, IconMoon],
+  ["system", t.profile.themeSystem, IconMonitor],
+] as const;
+
+/** Claro / Escuro / Sistema em três ícones (fica na barra do topo). */
 export function ThemeSwitch() {
   const theme = useSyncExternalStore(subscribe, read, () => "system" as Theme);
-
-  const options: [Theme, string][] = [
-    ["light", t.profile.themeLight],
-    ["dark", t.profile.themeDark],
-    ["system", t.profile.themeSystem],
-  ];
-
   return (
-    <div className="flex rounded-full border border-line p-0.5 text-xs" role="radiogroup" aria-label={t.profile.theme}>
-      {options.map(([v, label]) => (
+    <div className="inline-flex rounded-md bg-card p-0.5" role="radiogroup" aria-label={t.profile.theme}>
+      {OPTIONS.map(([v, label, Icon]) => (
         <button
           key={v}
           type="button"
           role="radio"
           aria-checked={theme === v}
+          aria-label={label}
+          title={label}
           onClick={() => apply(v)}
-          className={`cursor-pointer rounded-full px-2.5 py-1 ${theme === v ? "bg-fg text-bg" : "text-muted"}`}
+          className={`press grid h-7 w-7 cursor-pointer place-items-center rounded-[5px] transition-colors ${theme === v ? "bg-bg text-fg shadow-[0_1px_2px_rgb(0_0_0/0.18)]" : "text-muted hover:text-fg"}`}
         >
-          {label}
+          <Icon size={16} />
         </button>
       ))}
     </div>

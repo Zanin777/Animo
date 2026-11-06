@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Poster } from "@/components/Poster";
-import { Muted, PageTitle, btnGhost, btnPrimary, card, input } from "@/components/ui";
+import { Muted, PageTitle, btnGhost, btnPrimary, card, input, rows } from "@/components/ui";
 import { useCatalog } from "@/lib/catalog/local";
 import { diary, useDiary } from "@/lib/diary/store";
 import { t } from "@/messages";
@@ -32,13 +32,13 @@ export function ListsView() {
       {lists.length === 0 && !creating ? (
         <Muted>{t.lists.empty}</Muted>
       ) : (
-        <div className="grid gap-3">
+        <div className={rows}>
           {lists.map((l) => (
-            <Link key={l.id} href={`/listas/${l.id}`} className={`${card} flex items-center gap-4 p-3`}>
+            <Link key={l.id} href={`/listas/${l.id}`} className="flex items-center gap-4 py-3 transition-colors hover:bg-card">
               <div className="flex w-24 flex-none -space-x-6">
                 {l.items.slice(0, 3).map((i) => {
                   const a = catalog.get(i.animeId);
-                  return a ? <Poster key={i.animeId} anime={a} size="xs" className="w-12 ring-2 ring-card" /> : null;
+                  return a ? <Poster key={i.animeId} anime={a} size="xs" className="w-12 ring-2 ring-bg" /> : null;
                 })}
                 {l.items.length === 0 && <div className="aspect-[2/3] w-12 rounded-md border border-dashed border-line" />}
               </div>

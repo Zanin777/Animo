@@ -7,6 +7,57 @@ body {
   font-family: var(--font-sans);
   line-height: 1.55;
   -webkit-tap-highlight-color: transparent;
+  caret-color: var(--accent);
+  accent-color: var(--accent);
+  scrollbar-color: color-mix(in srgb, var(--muted) 45%, transparent) transparent;
+}
+
+/* superfícies do navegador com a paleta, não com o padrão do sistema */
+::selection {
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+  color: var(--fg);
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+/* .poster-link tem foco próprio (o pôster cresce e ganha contorno) */
+.poster-link:focus-visible {
+  outline: none;
+}
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+p {
+  text-wrap: pretty;
+}
+a {
+  text-underline-offset: 0.2em;
+}
+
+/* curvas fortes (Emil Kowalski): ease-out para responder, nunca ease-in */
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* o que é pressionável afunda um pouco: a interface "ouviu" o toque */
+.press {
+  transition:
+    transform 160ms var(--ease-out),
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+.press:active:not(:disabled) {
+  transform: scale(0.97);
+}
+@media (prefers-reduced-motion: reduce) {
+  .press:active:not(:disabled) {
+    transform: none;
+  }
 }
 
 /* selo hanko: igual ao de docs/estilo.html */
@@ -47,7 +98,7 @@ body {
 .poster-lift {
   border-radius: 8px;
 }
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
   .poster-link:hover {
     z-index: 5;
   }
@@ -107,6 +158,7 @@ body {
 
 /* pôster tipográfico */
 .poster {
+  container-type: inline-size; /* o título mede a largura em cqi */
   aspect-ratio: 2 / 3;
   border-radius: 8px;
   padding: 12px;
@@ -120,7 +172,10 @@ body {
 .poster-t {
   font-family: var(--font-display);
   line-height: 1.05;
-  word-break: break-word;
+  /* o tamanho já encolhe para a palavra caber (posterTitleSize);
+     se ainda faltar espaço, hifeniza em vez de cortar a letra solta */
+  overflow-wrap: break-word;
+  hyphens: auto;
   position: relative;
   z-index: 1;
 }
@@ -158,3 +213,11 @@ body {
 }
 .poster-xs .poster-meta { display: none; }
 .poster-xs .poster-rule { left: 6px; right: 6px; }
+
+/* abas roláveis sem barra de rolagem aparente */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

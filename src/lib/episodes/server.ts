@@ -13,19 +13,33 @@ export const ANIME_ID = /^[a-z0-9-]{1,80}$/; // mesmo limite de anime.id no banc
 
 type TmdbEpisode = { episode_number?: unknown; name?: unknown; still_path?: unknown; air_date?: unknown; runtime?: unknown };
 
-/** Uma temporada do TMDB, em cache por semanas (a lista de episódios quase não muda). */
+/**
+ * Uma temporada do TMDB. Deu certo: cache por semanas (a lista quase não muda).
+ * Falhou (sem token, TMDB fora, tempo esgotado): cache de segundos, para a
+ * próxima visita tentar de novo em vez de ficar semanas só com a numeração.
+ */
 async function fetchSeason(tvId: number, season: number): Promise<TmdbEpisode[] | null> {
   "use cache";
-  cacheLife("weeks");
   const token = process.env.TMDB_READ_TOKEN;
-  if (!token) return null;
-  const res = await fetch(`https://api.themoviedb.org/3/tv/${tvId}/season/${season}?language=pt-BR`, {
-    headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
-    signal: AbortSignal.timeout(10000),
-  });
-  if (!res.ok) return null;
-  const data = (await res.json()) as { episodes?: unknown };
-  return Array.isArray(data.episodes) ? (data.episodes as TmdbEpisode[]) : null;
+  let episodes: TmdbEpisode[] | null = null;
+  if (token) {
+    try {
+      const res = await fetch(`https://api.themoviedb.org/3/tv/${tvId}/season/${season}?language=pt-BR`, {
+        headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+        signal: AbortSignal.timeout(10000),
+      });
+      if (res.ok) {
+        const data = (await res.json()) as { episodes?: unknown };
+        if (Array.isArray(data.episodes)) episodes = data.episodes as TmdbEpisode[];
+      }
+    } catch {
+      // rede ou tempo esgotado: cai na numeração, com cache curto
+    }
+  }
+  // uma única chamada de cacheLife por execução (regra do Next)
+  if (episodes) cacheLife("weeks");
+  else cacheLife("seconds");
+  return episodes;
 }
 
 function clean(e: TmdbEpisode, number: number): Episode {

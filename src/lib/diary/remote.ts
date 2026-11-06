@@ -2,7 +2,19 @@
 // A segurança é do RLS: aqui só montamos as linhas; o banco recusa o que não for do usuário.
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Anime, AnimeKind } from "@/lib/catalog/provider";
-import { EMPTY_STATE, type DiaryList, type DiaryState, type Entry, type LibraryItem } from "./types";
+import {
+  ACCENTS,
+  EMPTY_PROFILE,
+  EMPTY_STATE,
+  canCustomize,
+  type Accent,
+  type DiaryList,
+  type DiaryState,
+  type Entry,
+  type LibraryItem,
+  type LocalProfile,
+  type ProfileRole,
+} from "./types";
 
 /** Uma mudança a mandar para o banco (fica numa fila até dar certo). */
 export type RemoteOp =
@@ -134,7 +146,7 @@ export async function pullState(sb: SupabaseClient, uid: string): Promise<DiaryS
     sb.from("favorites").select("anime_id, position").eq("user_id", uid).order("position"),
     sb.from("lists").select("id, title, description, is_ranked, created_at, updated_at, list_items(anime_id, position)").eq("user_id", uid).range(...RANGE),
     sb.from("episode_ratings").select("anime_id, episode, rating_half").eq("user_id", uid).range(...RANGE),
-    sb.from("profiles").select("username, display_name, bio").eq("id", uid).maybeSingle(),
+    sb.from("profiles").select(PROFILE_COLUMNS).eq("id", uid).maybeSingle(),
     sb.from("anime").select("id, title, title_original, year, kind, episodes").eq("created_by", uid).range(...RANGE),
   ]);
   if ([entries, library, favs, lists, eps, profile, custom].some((r) => r.error)) return null;
@@ -210,23 +222,46 @@ export function rowsToState(r: {
       tmdb: null,
       isVerified: false,
     })),
-    profile: {
-      displayName: (r.profile?.display_name as string) ?? "",
-      handle: (r.profile?.username as string) ?? "",
-      bio: (r.profile?.bio as string) ?? "",
-    },
+    profile: rowToProfile(r.profile),
   };
 }
 
-/** Salva o perfil no banco. "taken" = @usuário já existe. */
-export async function pushProfile(
-  sb: SupabaseClient,
-  uid: string,
-  p: { displayName: string; handle: string; bio: string },
-): Promise<"ok" | "taken" | "error"> {
-  const patch: Row = { display_name: p.displayName, bio: p.bio };
+export const PROFILE_COLUMNS = "id, username, display_name, bio, avatar_url, banner_url, accent, name_color, featured_anime_id, featured_note, role";
+
+const ROLES: ProfileRole[] = ["user", "plus", "dev"];
+/** Linha de profiles → LocalProfile (campos desconhecidos viram o padrão). */
+export function rowToProfile(p: Row | null): LocalProfile {
+  if (!p) return EMPTY_PROFILE;
+  const accent = p.accent as string | null;
+  const nameColor = p.name_color as string | null;
+  const role = p.role as ProfileRole;
+  return {
+    displayName: (p.display_name as string) ?? "",
+    handle: (p.username as string) ?? "",
+    bio: (p.bio as string) ?? "",
+    avatarUrl: (p.avatar_url as string | null) ?? null,
+    bannerUrl: (p.banner_url as string | null) ?? null,
+    accent: accent && (ACCENTS as readonly string[]).includes(accent) ? (accent as Accent) : null,
+    nameColor: nameColor && (ACCENTS as readonly string[]).includes(nameColor) ? (nameColor as Accent) : null,
+    featuredAnimeId: (p.featured_anime_id as string | null) ?? null,
+    featuredNote: (p.featured_note as string | null) ?? "",
+    role: ROLES.includes(role) ? role : "user",
+  };
+}
+
+/** Salva o perfil no banco. "taken" = @usuário já existe; "reserved" = recurso de outro nível. */
+export async function pushProfile(sb: SupabaseClient, uid: string, p: LocalProfile): Promise<"ok" | "taken" | "reserved" | "error"> {
+  const patch: Row = { display_name: p.displayName, bio: p.bio, avatar_url: p.avatarUrl };
   if (p.handle) patch.username = p.handle;
+  if (canCustomize(p.role)) {
+    patch.banner_url = p.bannerUrl;
+    patch.accent = p.accent;
+    patch.name_color = p.nameColor;
+    patch.featured_anime_id = p.featuredAnimeId;
+    patch.featured_note = p.featuredNote || null;
+  }
   const { error } = await sb.from("profiles").update(patch).eq("id", uid);
   if (!error) return "ok";
-  return error.code === "23505" ? "taken" : "error";
+  if (error.code === "23505") return "taken";
+  return error.code === "42501" ? "reserved" : "error";
 }

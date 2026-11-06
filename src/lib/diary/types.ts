@@ -59,7 +59,44 @@ export interface LocalProfile {
   /** mesmo formato de profiles.username no banco */
   handle: string;
   bio: string;
+  /** caminho no Storage do Supabase ("/storage/v1/object/public/avatars/<id>/…"); null = selo com a inicial */
+  avatarUrl: string | null;
+  /** capa do perfil (reservado: plus/dev) */
+  bannerUrl: string | null;
+  /** cor de destaque do perfil (reservado: plus/dev); null = carmesim */
+  accent: Accent | null;
+  /** cor do nome (reservado: plus/dev); null = cor normal do texto */
+  nameColor: Accent | null;
+  /** anime fixado no topo do perfil (reservado: plus/dev) */
+  featuredAnimeId: string | null;
+  featuredNote: string;
+  /** definido só pelo banco; o usuário não altera */
+  role: ProfileRole;
 }
+
+export type ProfileRole = "user" | "plus" | "dev";
+export const ACCENTS = ["carmesim", "anil", "jade", "ambar", "sakura", "grafite"] as const;
+export type Accent = (typeof ACCENTS)[number];
+/** Premium ("plus" no banco): capa, cor do perfil, cor do nome, anime em destaque,
+ *  sem anúncios e reviews primeiro. O dev tem tudo. */
+export const isPremium = (role: ProfileRole) => role === "plus" || role === "dev";
+export const canCustomize = isPremium;
+/** Anúncios só para quem não é Premium (ainda não há anúncios no Aniora). */
+export const showsAds = (role: ProfileRole) => !isPremium(role);
+export const FEATURED_NOTE_MAX = 120;
+
+export const EMPTY_PROFILE: LocalProfile = {
+  displayName: "",
+  handle: "",
+  bio: "",
+  avatarUrl: null,
+  bannerUrl: null,
+  accent: null,
+  nameColor: null,
+  featuredAnimeId: null,
+  featuredNote: "",
+  role: "user",
+};
 
 export const HANDLE_RE = /^[a-z0-9_]{3,20}$/;
 
@@ -73,5 +110,5 @@ export const EMPTY_STATE: DiaryState = Object.freeze({
   lists: [],
   customAnime: [],
   episodeRatings: {},
-  profile: { displayName: "", handle: "", bio: "" },
+  profile: EMPTY_PROFILE,
 }) as DiaryState;

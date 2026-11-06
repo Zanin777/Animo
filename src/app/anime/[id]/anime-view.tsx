@@ -1,12 +1,14 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import { CommunityReviews } from "@/components/CommunityReviews";
 import { SeasonsSection } from "@/components/SeasonsSection";
+import { IconHeart } from "@/components/Icons";
 import { openLog } from "@/components/LogDrawer";
 import { useState } from "react";
 import { EntryRow } from "@/components/EntryRow";
 import { Poster } from "@/components/Poster";
-import { Muted, SectionTitle, btnGhost, btnPrimary, input } from "@/components/ui";
+import { Muted, SectionTitle, btnGhost, btnPrimary, input, rows } from "@/components/ui";
 import { useCatalog } from "@/lib/catalog/local";
 import { diary, useDiary } from "@/lib/diary/store";
 import type { WatchStatus } from "@/lib/diary/types";
@@ -50,13 +52,15 @@ export function AnimeView() {
             </button>
             <button
               type="button"
-              className={`${btnGhost} ${isFav ? "border-accent text-accent" : ""}`}
+              className={`${btnGhost} ${isFav ? "text-accent" : ""}`}
+              aria-pressed={isFav}
               onClick={() => {
                 const ok = diary.toggleFavorite(anime.id);
                 setNotice(ok ? null : t.anime.favoritesFull);
               }}
             >
-              {isFav ? `♥ ${t.anime.unfavorite}` : `♡ ${t.anime.favorite}`}
+              <IconHeart size={17} filled={isFav} />
+              {isFav ? t.anime.unfavorite : t.anime.favorite}
             </button>
           </div>
         </div>
@@ -64,7 +68,8 @@ export function AnimeView() {
 
       {notice && <p className="mt-3 text-sm text-accent">{notice}</p>}
 
-      <div className="mt-6 flex flex-wrap items-center gap-2" role="group" aria-label="Status">
+      <div className="mt-6 flex flex-wrap items-center gap-3">
+      <div className="inline-flex rounded-md bg-card p-1" role="group" aria-label="Status">
         {STATUSES.map((s) => {
           const on = lib?.status === s;
           return (
@@ -73,19 +78,22 @@ export function AnimeView() {
               type="button"
               aria-pressed={on}
               onClick={() => diary.setStatus(anime.id, on ? null : s)}
-              className={`cursor-pointer rounded-full border px-3 py-1.5 text-sm ${on ? "border-accent font-bold text-accent" : "border-line"}`}
+              className={`press cursor-pointer rounded-[5px] px-3 py-1.5 text-sm transition-colors ${
+                on ? "bg-bg font-bold text-fg shadow-[0_1px_2px_rgb(0_0_0/0.18)]" : "text-muted hover:text-fg"
+              }`}
             >
               {t.status[s]}
             </button>
           );
         })}
+      </div>
         {lib?.status === "watching" && (
           <>
-            <span className="ml-2 text-sm text-muted">{t.home.episodeOf(lib.episodesWatched, anime.episodes)}</span>
+            <span className="text-sm text-muted">{t.home.episodeOf(lib.episodesWatched, anime.episodes)}</span>
             <button
               type="button"
               onClick={() => diary.plusOneEpisode(anime)}
-              className="cursor-pointer rounded-full border border-accent px-2.5 py-1 text-xs font-bold text-accent"
+              className="press cursor-pointer rounded-md bg-card px-2.5 py-1.5 text-xs font-bold text-fg hover:text-accent"
             >
               {t.home.plusOne}
             </button>
@@ -120,7 +128,7 @@ export function AnimeView() {
       {entries.length === 0 ? (
         <Muted>{t.anime.noEntries}</Muted>
       ) : (
-        <div className="grid gap-2.5">
+        <div className={rows}>
           {entries.map((e) => (
             <div key={e.id} className="group relative">
               <EntryRow entry={e} anime={anime} showTitle={false} />
@@ -137,6 +145,8 @@ export function AnimeView() {
           ))}
         </div>
       )}
+
+      <CommunityReviews key={`r-${anime.id}`} animeId={anime.id} />
 
       <SeasonsSection key={anime.id} anime={anime} />
     </>

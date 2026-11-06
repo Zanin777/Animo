@@ -8,7 +8,7 @@ import { STILL_PATH, numberedEpisodes, type Episode, type EpisodesResponse } fro
 import { posterStyle } from "@/lib/poster";
 import { formatRating } from "@/lib/rating";
 import { formatDate, t } from "@/messages";
-import { Muted, SectionTitle, btnGhost } from "./ui";
+import { Muted, SectionTitle, btnGhost, rows, tag } from "./ui";
 import { StarRating } from "./StarRating";
 
 const PAGE = 30;
@@ -67,7 +67,7 @@ export function EpisodeList({ anime }: { anime: Anime }) {
         <Muted>{t.episodes.none}</Muted>
       ) : (
         <>
-          <ol className="grid gap-2">
+          <ol className={rows}>
             {episodes.slice(0, shown).map((ep) => (
               <EpisodeRow
                 key={ep.number}
@@ -95,8 +95,8 @@ function EpisodeRow({ anime, ep, rating, watched, isBest }: { anime: Anime; ep: 
   const [failed, setFailed] = useState(false);
   const still = !failed && ep.still && STILL_PATH.test(ep.still) ? ep.still : null;
   return (
-    <li id={`ep-${ep.number}`} className={`scroll-mt-20 grid grid-cols-[112px_1fr] gap-3 rounded-xl border bg-card p-2 sm:grid-cols-[160px_1fr_auto] sm:items-center ${isBest ? "border-accent" : "border-line"}`}>
-      <div className="relative aspect-video overflow-hidden rounded-lg" style={{ background: palette.bg, color: palette.fg }}>
+    <li id={`ep-${ep.number}`} className="scroll-mt-20 grid grid-cols-[112px_1fr] gap-3 py-3 sm:grid-cols-[148px_1fr_auto] sm:items-center">
+      <div className="relative aspect-video overflow-hidden rounded-md" style={{ background: palette.bg, color: palette.fg }}>
         {still ? (
           <Image
             src={`https://image.tmdb.org/t/p/w300${still}`}
@@ -115,8 +115,8 @@ function EpisodeRow({ anime, ep, rating, watched, isBest }: { anime: Anime; ep: 
           <span className="font-bold text-fg">{t.episodes.ep(ep.number)}</span>
           {ep.airDate && ` · ${formatDate(ep.airDate)}`}
           {ep.runtime && ` · ${t.episodes.min(ep.runtime)}`}
-          {watched && <span className="ml-1.5 rounded-full border border-line px-1.5 text-[10px]">{t.episodes.watched}</span>}
-          {isBest && <span className="ml-1.5 rounded-full border border-accent px-1.5 text-[10px] text-accent">{t.episodes.best}</span>}
+          {watched && <span className={`ml-1.5 ${tag}`}>{t.episodes.watched}</span>}
+          {isBest && <span className="ml-1.5 text-[11px] font-bold text-accent">{t.episodes.best}</span>}
         </p>
         {ep.name && <p className="line-clamp-2 text-sm font-bold leading-snug">{ep.name}</p>}
         <div className="mt-1 sm:hidden">

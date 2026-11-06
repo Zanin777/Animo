@@ -7,7 +7,7 @@ const SEED_ANIME = (generated.anime as CatalogRow[]).map(rowToAnime);
 import * as ops from "./diary/ops";
 import { computeStats } from "./diary/stats";
 import { EMPTY_STATE, type DiaryState } from "./diary/types";
-import { POSTER_PALETTES, hashTitle, posterStyle } from "./poster";
+import { POSTER_PALETTES, hashTitle, posterStyle, posterTitleSize } from "./poster";
 import { formatRating, halfToStars, starsToHalf } from "./rating";
 
 let n = 0;
@@ -39,6 +39,10 @@ describe("pôster", () => {
   });
   test("paleta sempre válida", () => {
     for (const a of SEED_ANIME) expect(POSTER_PALETTES).toContain(posterStyle(a.title).palette);
+  });
+  test("título encolhe pela palavra mais longa", () => {
+    expect(posterStyle("Sen to Chihiro no Kamikakushi").longestWord).toBe(11);
+    expect(posterTitleSize(24, 8)).toBe("clamp(9px, calc(100cqi / 6.08), 24px)");
   });
 });
 

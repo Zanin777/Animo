@@ -26,7 +26,7 @@ describe("perfil local", () => {
   test("normaliza usuário e salva", () => {
     const r = ops.updateProfile(EMPTY_STATE, { displayName: " Matheus ", handle: "@Matheus_Z", bio: "oi" });
     expect(r.error).toBeNull();
-    expect(r.state.profile).toEqual({ displayName: "Matheus", handle: "matheus_z", bio: "oi" });
+    expect(r.state.profile).toMatchObject({ displayName: "Matheus", handle: "matheus_z", bio: "oi" });
   });
   test("mesmas regras do banco", () => {
     expect(ops.updateProfile(EMPTY_STATE, { displayName: "", handle: "ab", bio: "" }).error).toBe("handle");

@@ -4,7 +4,8 @@ import Link from "next/link";
 import { EntryRow } from "@/components/EntryRow";
 import { openLog } from "@/components/LogDrawer";
 import { Poster } from "@/components/Poster";
-import { Muted, PageTitle, SectionTitle, btnPrimary, card } from "@/components/ui";
+import { ThemeSwitch } from "@/components/ThemeSwitch";
+import { Muted, PageTitle, SectionTitle, btnPrimary, card, rows } from "@/components/ui";
 import { useCatalog } from "@/lib/catalog/local";
 import { useCommunity } from "@/lib/community";
 import { diary, useDiary } from "@/lib/diary/store";
@@ -40,7 +41,13 @@ export function HomeView() {
 
   return (
     <>
-      <PageTitle>
+      <PageTitle
+        aside={
+          <span className="md:hidden">
+            <ThemeSwitch />
+          </span>
+        }
+      >
         <span className="md:hidden">
           aniora<span className="text-accent">.</span>
         </span>
@@ -63,7 +70,7 @@ export function HomeView() {
                   <button
                     type="button"
                     onClick={() => diary.plusOneEpisode(anime!)}
-                    className="cursor-pointer rounded-full border border-accent px-2 py-0.5 text-xs font-bold text-accent"
+                    className="press cursor-pointer rounded-md bg-card px-2 py-0.5 text-xs font-bold text-fg hover:text-accent"
                   >
                     {t.home.plusOne}
                   </button>
@@ -101,7 +108,7 @@ export function HomeView() {
           </button>
         </div>
       ) : (
-        <div className="grid gap-2.5">
+        <div className={rows}>
           {entries.map((e) => {
             const anime = catalog.get(e.animeId);
             return anime ? <EntryRow key={e.id} entry={e} anime={anime} /> : null;

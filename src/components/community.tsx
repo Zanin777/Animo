@@ -4,7 +4,6 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import type { Anime } from "@/lib/catalog/provider";
 import type { AnimeStat } from "@/lib/community/types";
-import { formatRating } from "@/lib/rating";
 import { t } from "@/messages";
 import { Hanko } from "./Hanko";
 import { Poster } from "./Poster";
@@ -14,9 +13,9 @@ export function DemoBadge({ show }: { show: boolean }) {
   return (
     <span
       title={t.community.demoHint}
-      className="ml-2 inline-block rounded-full border border-dashed border-accent px-2 py-0.5 align-middle font-sans text-[10px] font-bold tracking-wide text-accent uppercase"
+      className="ml-2 align-middle text-xs font-normal text-muted underline decoration-dotted decoration-1 underline-offset-4"
     >
-      {t.community.demo}
+      {t.community.demoShort}
     </span>
   );
 }
@@ -33,7 +32,7 @@ export function Tabs<K extends string>({
   label: string;
 }) {
   return (
-    <div className="mb-4 flex flex-wrap gap-2" role="tablist" aria-label={label}>
+    <div className="no-scrollbar mb-4 flex gap-5 overflow-x-auto border-b border-line" role="tablist" aria-label={label}>
       {tabs.map(([k, text]) => (
         <button
           key={k}
@@ -41,7 +40,9 @@ export function Tabs<K extends string>({
           role="tab"
           aria-selected={value === k}
           onClick={() => onChange(k)}
-          className={`cursor-pointer rounded-full border px-3 py-1 text-sm ${value === k ? "border-accent font-bold text-accent" : "border-line"}`}
+          className={`-mb-px flex-none cursor-pointer border-b-2 pb-2 text-sm whitespace-nowrap transition-colors ${
+            value === k ? "border-accent font-bold text-fg" : "border-transparent text-muted hover:text-fg"
+          }`}
         >
           {text}
         </button>
@@ -95,14 +96,14 @@ export function RankRow({
 }) {
   return (
     <li>
-      <Link href={href ?? `/anime/${anime.id}`} className="grid grid-cols-[28px_40px_1fr_auto] items-center gap-3 rounded-lg p-1.5 hover:bg-card">
-        <span className={`text-center font-display ${pos <= 3 ? "text-xl text-accent" : "text-muted"}`}>{pos}</span>
+      <Link href={href ?? `/anime/${anime.id}`} className="grid grid-cols-[28px_36px_1fr_auto] items-center gap-3 py-2.5 transition-colors hover:bg-card">
+        <span className={`text-center font-display tabular-nums ${pos <= 3 ? "text-lg text-fg" : "text-muted"}`}>{pos}</span>
         <Poster anime={anime} size="xs" />
         <span className="min-w-0">
           <span className="block truncate font-bold">{title ?? anime.title}</span>
           <span className="block text-xs text-muted">{metric}</span>
         </span>
-        {half != null ? <span className="font-display text-accent">{formatRating(Math.round(half))}</span> : <span />}
+        {half != null ? <Hanko half={Math.round(half)} size="sm" /> : <span />}
       </Link>
     </li>
   );

@@ -13,7 +13,7 @@ import { onAuth } from "@/lib/auth";
 import { getSupabase } from "@/lib/supabase/client";
 import * as ops from "./ops";
 import { hasData, importOps, pullState, pushOp, pushProfile, type RemoteOp } from "./remote";
-import { EMPTY_STATE, type DiaryState, type WatchStatus } from "./types";
+import { EMPTY_PROFILE, EMPTY_STATE, type DiaryState, type WatchStatus } from "./types";
 
 const GUEST_KEY = "aniora:v1";
 /** Nome antigo do app (Cour). Lido uma vez e migrado. */
@@ -39,7 +39,7 @@ function readState(key: string): DiaryState | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as DiaryState;
     if (parsed?.version !== 1) return null;
-    return { ...EMPTY_STATE, ...parsed, profile: { ...EMPTY_STATE.profile, ...parsed.profile } };
+    return { ...EMPTY_STATE, ...parsed, profile: { ...EMPTY_PROFILE, ...parsed.profile } };
   } catch {
     return null; // bloqueado ou corrompido
   }
@@ -220,6 +220,9 @@ const listOps = (s: DiaryState, listId: string): RemoteOp[] => {
   ];
 };
 
+/** id do usuário logado (para o envio de fotos); null = convidado */
+export const currentUserId = () => userId;
+
 export const diary = {
   addEntry(input: ops.NewEntryInput, anime: Anime | null) {
     const next = ops.addEntry(current(), input, anime, ctx());
@@ -262,13 +265,14 @@ export const diary = {
     commit(next, listOps(next, listId));
   },
   /** Valida; se logado, grava no banco antes (o @usuário precisa ser único). */
-  async saveProfile(input: { displayName: string; handle: string; bio: string }): Promise<ops.ProfileError | "taken" | "network" | null> {
+  async saveProfile(input: ops.ProfileInput): Promise<ops.ProfileError | "taken" | "network" | null> {
     const r = ops.updateProfile(current(), input);
     if (r.error) return r.error;
     const sb = getSupabase();
     if (sb && userId) {
       const res = await pushProfile(sb, userId, r.state.profile);
       if (res === "taken") return "taken";
+      if (res === "reserved") return "reserved";
       if (res === "error") return "network";
     }
     commit({ ...current(), profile: r.state.profile });

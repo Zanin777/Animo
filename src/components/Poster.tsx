@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import type { Anime } from "@/lib/catalog/provider";
-import { posterStyle } from "@/lib/poster";
+import { posterStyle, posterTitleSize } from "@/lib/poster";
 import { t } from "@/messages";
 
 type Props = {
@@ -23,7 +23,7 @@ const COVER_PATH = /^\/[A-Za-z0-9_-]{5,64}\.(jpg|png)$/;
  */
 export function Poster({ anime, size = "md", className = "" }: Props) {
   const [failed, setFailed] = useState(false);
-  const { palette, variant, fontSize } = posterStyle(anime.title);
+  const { palette, variant, fontSize, longestWord } = posterStyle(anime.title);
   const xs = size === "xs";
   const cover = !failed && anime.cover && COVER_PATH.test(anime.cover) ? anime.cover : null;
 
@@ -35,7 +35,7 @@ export function Poster({ anime, size = "md", className = "" }: Props) {
     >
       {variant === "mark" && <div className="poster-mark" style={{ background: palette.mark }} />}
       {variant === "rule" && <div className="poster-rule" style={{ background: palette.fg }} />}
-      <div className="poster-t" style={{ fontSize: xs ? 9 : fontSize }}>
+      <div className="poster-t" style={{ fontSize: xs ? 9 : posterTitleSize(fontSize, longestWord) }}>
         {anime.title}
       </div>
       <div className="poster-meta">

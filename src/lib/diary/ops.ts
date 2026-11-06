@@ -1,7 +1,7 @@
 // Regras do diário como funções puras: estado entra, estado novo sai.
 // Fáceis de testar e iguais às regras que o banco vai validar depois.
 import type { Anime, NewAnimeInput } from "@/lib/catalog/provider";
-import { HANDLE_RE, MAX_FAVORITES, type DiaryState, type Entry, type WatchStatus } from "./types";
+import { ACCENTS, FEATURED_NOTE_MAX, HANDLE_RE, MAX_FAVORITES, canCustomize, type DiaryState, type Entry, type LocalProfile, type WatchStatus } from "./types";
 
 export interface Ctx {
   now: string; // ISO
@@ -159,20 +159,41 @@ export function removeFromList(s: DiaryState, listId: string, animeId: string, c
   };
 }
 
-export type ProfileError = "handle" | "displayName" | "bio";
+export type ProfileError = "handle" | "displayName" | "bio" | "accent" | "featuredNote" | "reserved";
 
 /** Atualiza o perfil local com as mesmas regras do banco (profiles). */
-export function updateProfile(
-  s: DiaryState,
-  input: { displayName: string; handle: string; bio: string },
-): { state: DiaryState; error: ProfileError | null } {
+export type ProfileInput = Pick<LocalProfile, "displayName" | "handle" | "bio"> &
+  Partial<Pick<LocalProfile, "avatarUrl" | "bannerUrl" | "accent" | "nameColor" | "featuredAnimeId" | "featuredNote">>;
+
+export function updateProfile(s: DiaryState, input: ProfileInput): { state: DiaryState; error: ProfileError | null } {
   const displayName = input.displayName.trim();
   const handle = input.handle.trim().toLowerCase().replace(/^@/, "");
   const bio = input.bio.trim();
   if (handle && !HANDLE_RE.test(handle)) return { state: s, error: "handle" };
   if (displayName.length > 50) return { state: s, error: "displayName" };
   if (bio.length > 300) return { state: s, error: "bio" };
-  return { state: { ...s, profile: { displayName, handle, bio } }, error: null };
+  const prev = s.profile;
+  const next: LocalProfile = { ...prev, displayName, handle, bio };
+  if (input.avatarUrl !== undefined) next.avatarUrl = input.avatarUrl;
+  // recursos reservados: só plus/dev (o banco também recusa)
+  const reserved = input.bannerUrl !== undefined || input.accent !== undefined || input.nameColor !== undefined || input.featuredAnimeId !== undefined || input.featuredNote !== undefined;
+  if (reserved && !canCustomize(prev.role)) return { state: s, error: "reserved" };
+  if (input.bannerUrl !== undefined) next.bannerUrl = input.bannerUrl;
+  if (input.accent !== undefined) {
+    if (input.accent !== null && !(ACCENTS as readonly string[]).includes(input.accent)) return { state: s, error: "accent" };
+    next.accent = input.accent;
+  }
+  if (input.nameColor !== undefined) {
+    if (input.nameColor !== null && !(ACCENTS as readonly string[]).includes(input.nameColor)) return { state: s, error: "accent" };
+    next.nameColor = input.nameColor;
+  }
+  if (input.featuredAnimeId !== undefined) next.featuredAnimeId = input.featuredAnimeId;
+  if (input.featuredNote !== undefined) {
+    const note = input.featuredNote.trim();
+    if (note.length > FEATURED_NOTE_MAX) return { state: s, error: "featuredNote" };
+    next.featuredNote = note;
+  }
+  return { state: { ...s, profile: next }, error: null };
 }
 
 /** Nota de um episódio (1..10); null tira a nota. */

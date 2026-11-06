@@ -5,7 +5,7 @@ import { useState } from "react";
 import { DemoBadge, RankRow, Tabs, TrendingCard } from "@/components/community";
 import { Hanko } from "@/components/Hanko";
 import { Poster } from "@/components/Poster";
-import { Muted, SectionTitle, btnGhost, card } from "@/components/ui";
+import { Muted, SectionTitle, linkAction, rows as ruledRows } from "@/components/ui";
 import type { Anime } from "@/lib/catalog/provider";
 import type { LocalCatalog } from "@/lib/catalog/local";
 import { FEATURED_IDS } from "@/lib/catalog/seed";
@@ -52,15 +52,12 @@ export function CatalogHighlights({ catalog }: { catalog: LocalCatalog }) {
   if (!items.length) return null;
   return (
     <section>
-      <SectionTitle>{t.home.highlightsTitle}</SectionTitle>
+      <SectionTitle action={<Link href="/buscar" className={linkAction}>{t.community.seeCatalog}</Link>}>{t.home.highlightsTitle}</SectionTitle>
       <div className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pt-3 pb-3">
         {items.map((a) => (
           <TrendingCard key={a.id} anime={a} />
         ))}
       </div>
-      <Link href="/buscar" className={`${btnGhost} mt-3`}>
-        {t.community.seeCatalog} →
-      </Link>
     </section>
   );
 }
@@ -90,7 +87,7 @@ export function TrendingSection({ snap, catalog }: Props) {
   const stats = tab === "popular" ? trending(snap.events, 12) : trendingAmongFriends(snap.events, snap.following, 12);
   return (
     <section>
-      <SectionTitle>
+      <SectionTitle action={<Link href="/buscar" className={linkAction}>{t.community.seeCatalog}</Link>}>
         {t.community.trendingTitle}
         <DemoBadge show={snap.demo} />
       </SectionTitle>
@@ -115,9 +112,6 @@ export function TrendingSection({ snap, catalog }: Props) {
           })}
         </div>
       )}
-      <Link href="/buscar" className={`${btnGhost} mt-3`}>
-        {t.community.seeCatalog} →
-      </Link>
     </section>
   );
 }
@@ -150,7 +144,7 @@ export function RankingsSection({ snap, catalog }: Props) {
       {empty ? (
         <Muted>{t.community.empty}</Muted>
       ) : isEp ? (
-        <ol className={`${card} grid gap-0.5 p-2`}>
+        <ol className={ruledRows}>
           {epRows.map((s, i) => {
             const a = catalog.get(s.animeId);
             if (!a) return null;
@@ -168,7 +162,7 @@ export function RankingsSection({ snap, catalog }: Props) {
           })}
         </ol>
       ) : (
-        <ol className={`${card} grid gap-0.5 p-2`}>
+        <ol className={ruledRows}>
           {rows.map((s, i) => {
             const a = catalog.get(s.animeId);
             if (!a) return null;
@@ -199,7 +193,7 @@ export function ActivitySection({ snap, catalog }: Props) {
       {items.length === 0 ? (
         <Muted>{t.community.empty}</Muted>
       ) : (
-        <ul className="grid gap-2">
+        <ul className={ruledRows}>
           {items.map((it, i) => {
             const anime = "animeId" in it ? catalog.get(it.animeId) : null;
             if ("animeId" in it && !anime) return null;
@@ -209,7 +203,7 @@ export function ActivitySection({ snap, catalog }: Props) {
               : it.kind === "reviewed" ? t.community.actReviewed
               : t.community.actList;
             return (
-              <li key={i} className={`${card} flex items-start gap-3 p-3`}>
+              <li key={i} className="flex items-start gap-3 py-3">
                 {anime ? (
                   <Link href={`/anime/${anime.id}`} className="w-9 flex-none" aria-label={anime.title}>
                     <Poster anime={anime} size="xs" />
@@ -246,13 +240,13 @@ export function FeaturedListsSection({ snap, catalog }: Props) {
       {lists.length === 0 ? (
         <Muted>{t.community.empty}</Muted>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-x-8 gap-y-5 sm:grid-cols-2">
           {lists.map((l) => (
-            <article key={l.id} className={`${card} flex items-center gap-4 p-3`}>
+            <article key={l.id} className="flex items-center gap-4">
               <div className="flex w-28 flex-none -space-x-7">
                 {l.animeIds.slice(0, 4).map((id) => {
                   const a = catalog.get(id);
-                  return a ? <Poster key={id} anime={a} size="xs" className="w-11 ring-2 ring-card" /> : null;
+                  return a ? <Poster key={id} anime={a} size="xs" className="w-11 ring-2 ring-bg" /> : null;
                 })}
               </div>
               <div className="min-w-0">
