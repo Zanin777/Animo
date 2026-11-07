@@ -25,7 +25,17 @@ O que usamos do repositório é **um arquivo JSON**, só lido com `JSON.parse`. 
 
 A importação valida cada item no fim; se algum fugir das regras, nada é gravado.
 
-## Capas (TMDB)
+## Capas (AniList)
+
+Decisão de 2026-11-07: as capas vêm do AniList (`graphql.anilist.co`, grátis e sem chave). O id do AniList sai das `sources` do anime-offline-database, então não há casamento por título.
+
+- **Rodar:** o próprio `import-catalog.mjs` busca as capas que faltam (50 por requisição, ~30 req/min) e guarda o cache em `tools/anilist-covers.json` (`{ anilistId: "/arquivo.jpg" | null }`).
+- **O que guardamos:** só o nome do arquivo da capa `extraLarge`, validado por regex; o app monta `s4.anilist.co/file/anilistcdn/media/anime/cover/large/<arquivo>`. `next.config.ts` só aceita esse caminho.
+- **Temporadas extras** (vindas do TMDB) usam a capa da série.
+- **Termos:** uso comercial (Premium, anúncios) pede autorização do AniList antes.
+- O TMDB continua só para ids, temporadas e episódios (seção abaixo).
+
+## TMDB (histórico: era a fonte das capas até 2026-11-07)
 
 Decisão de 2026-11-04: capa oficial do TMDB onde houver; o pôster tipográfico da direção de arte continua como reserva (sem capa, ou se a imagem falhar).
 

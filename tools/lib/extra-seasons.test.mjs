@@ -33,14 +33,10 @@ describe("temporadas que faltam", () => {
       title: "Haikyuu!! (Temporada 2)",
       year: 2015,
       episodes: 25,
-      cover: "/s2abc.jpg",
+      cover: "/base1.jpg",
       genres: ["sports"],
       tmdb: { id: 1, type: "tv", season: 2, offset: 0, count: 25 },
       extraSeason: true,
     });
-  });
-  test("capa inválida do TMDB cai na capa da série", () => {
-    const bad = { 1: { seasons: [{ season_number: 2, episode_count: 3, air_date: "2015-01-01", poster_path: "https://evil/x.jpg" }] } };
-    expect(buildExtraSeasons([base], bad)[0].cover).toBe("/base1.jpg");
   });
 });

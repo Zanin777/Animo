@@ -10,6 +10,7 @@ export const ptBR = {
     log: "Registrar",
     lists: "Listas",
     profile: "Perfil",
+    signin: "Entrar",
   },
   status: {
     want: "Quero ver",
@@ -105,6 +106,7 @@ export const ptBR = {
   },
   log: {
     title: "Registrar",
+    loginRequired: "Entre na sua conta para registrar animes.",
     step1: "Qual anime?",
     step2: "Sua nota",
     step3: "Pronto para salvar",

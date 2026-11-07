@@ -1,6 +1,5 @@
 // Monta entradas de catálogo para temporadas do TMDB que ainda não existem
 // no catálogo (ex.: só temos a T1 de uma série que tem T1..T4).
-import { POSTER_PATH } from "./tmdb-merge.mjs";
 
 const slug = (s) =>
   s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "anime";
@@ -56,7 +55,7 @@ export function buildExtraSeasons(anime, shows) {
         year: year && year >= 1910 && year <= 2100 ? year : null,
         kind: "tv",
         episodes: count,
-        cover: typeof s.poster_path === "string" && POSTER_PATH.test(s.poster_path) ? s.poster_path : base.cover ?? null,
+        cover: base.cover ?? null, // capa da série (AniList)
         genres: base.genres ?? [],
         tmdb: { id: tmdbId, type: "tv", season: n, offset: 0, count },
         extraSeason: true,

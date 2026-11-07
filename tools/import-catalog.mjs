@@ -7,11 +7,12 @@
 //   - só lê o JSON (JSON.parse); nenhum código do repositório é executado
 //   - confere o SHA-256 contra o valor fixado abaixo (troca de versão = trocar o hash)
 //   - limpa caracteres de controle/bidi/zero-width, respeita os limites do schema
-//   - NÃO guarda imagens nem URLs de terceiros
+//   - NÃO guarda imagens nem URLs de terceiros (da capa do AniList, só o nome do arquivo)
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { buildExtraSeasons } from "./lib/extra-seasons.mjs";
 import { applyTmdb } from "./lib/tmdb-merge.mjs";
+import { anilistId, fetchCovers } from "./lib/anilist.mjs";
 import { fileURLToPath } from "node:url";
 
 const SOURCE = {
@@ -26,7 +27,7 @@ const SOURCE = {
 const root = new URL("..", import.meta.url);
 const OUT = fileURLToPath(new URL("src/lib/catalog/catalog.generated.json", root));
 const CURATED = JSON.parse(readFileSync(new URL("tools/catalog-curated.json", root), "utf8")).items;
-// Capas do TMDB já encontradas (tools/fetch-covers.mjs). Só o caminho do pôster, validado.
+// Ids do TMDB já encontrados (tools/fetch-covers.mjs): episódios e temporadas.
 const COVERS_FILE = new URL("tools/tmdb-covers.json", root);
 const COVERS = existsSync(COVERS_FILE) ? JSON.parse(readFileSync(COVERS_FILE, "utf8")) : {};
 const POSTER_PATH =/^\/[A-Za-z0-9_-]{5,64}\.(jpg|png)$/;
@@ -101,7 +102,6 @@ function toAnime(a, id, extraAliases = []) {
     aliases.push(c);
     if (aliases.length >= 8 + extraAliases.length) break;
   }
-  const cover = COVERS[id]?.posterPath;
   return {
     id,
     title,
@@ -110,7 +110,8 @@ function toAnime(a, id, extraAliases = []) {
     kind,
     // em exibição o total ainda não é conhecido
     episodes: a.status === "ONGOING" ? null : intIn(a.episodes, 1, 5000),
-    cover: typeof cover === "string" && POSTER_PATH.test(cover) ? cover : null,
+    cover: null, // preenchida pelo AniList abaixo
+    anilist: anilistId(a.sources),
     genres: genresOf(a.tags),
   };
 }
@@ -152,6 +153,17 @@ for (const a of pool) {
 // ── capas e temporadas do TMDB (caches dos scripts covers/seasons) ──
 const SEASONS_FILE = new URL("tools/tmdb-seasons.json", root);
 applyTmdb(out, COVERS, existsSync(SEASONS_FILE) ? JSON.parse(readFileSync(SEASONS_FILE, "utf8")) : {});
+
+// ── capas do AniList (cache em tools/anilist-covers.json: { anilistId: "/arquivo.jpg" | null }) ──
+const ANI_FILE = new URL("tools/anilist-covers.json", root);
+const aniCache = existsSync(ANI_FILE) ? JSON.parse(readFileSync(ANI_FILE, "utf8")) : {};
+await fetchCovers(out.map((a) => a.anilist).filter(Boolean), aniCache);
+writeFileSync(ANI_FILE, JSON.stringify(aniCache) + "\n");
+for (const a of out) {
+  const c = aniCache[a.anilist];
+  a.cover = typeof c === "string" && POSTER_PATH.test(c) ? c : null;
+  delete a.anilist;
+}
 // temporadas que o TMDB tem e o catálogo não (tools/fill-seasons.mjs)
 const SHOWS_FILE = new URL("tools/tmdb-shows.json", root);
 if (existsSync(SHOWS_FILE)) out.push(...buildExtraSeasons(out, JSON.parse(readFileSync(SHOWS_FILE, "utf8"))));

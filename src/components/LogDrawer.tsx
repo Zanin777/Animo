@@ -26,6 +26,10 @@ export function openLog(animeId: string | null = null) {
   set({ open: true, animeId, key: state.key + 1 });
 }
 
+export function closeLog() {
+  set({ open: false });
+}
+
 export function LogDrawer() {
   const s = useSyncExternalStore(subscribe, () => state, () => CLOSED);
   return (
