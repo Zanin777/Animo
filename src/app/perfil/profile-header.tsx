@@ -27,7 +27,9 @@ import type { ProfileError } from "@/lib/diary/ops";
 import { currentUserId, diary, useSyncStatus } from "@/lib/diary/store";
 import { ACCENTS, FEATURED_NOTE_MAX, isPremium, type Accent, type LocalProfile } from "@/lib/diary/types";
 import { ACCENT_COLORS, DEV_GOLD, accentStyle } from "@/lib/profile/accents";
-import { removeProfileImage, storageUrl, uploadProfileImage, type UploadError, type UploadKind } from "@/lib/profile/upload";
+import type { Crop } from "@/lib/profile/crop";
+import { ASPECT, removeProfileImage, storageUrl, uploadProfileImage, type UploadError, type UploadKind } from "@/lib/profile/upload";
+import { ImageCropper } from "@/components/ImageCropper";
 import { SUPABASE_ENABLED } from "@/lib/supabase/env";
 import { t } from "@/messages";
 
@@ -350,12 +352,15 @@ function ProfileEditor({
     if (path && path !== savedPath) void removeProfileImage(path);
   };
 
-  async function upload(kind: UploadKind, file: File | undefined) {
-    if (!file) return;
+  // imagem escolhida, esperando o ajuste do recorte
+  const [pick, setPick] = useState<{ kind: UploadKind; file: File } | null>(null);
+
+  async function upload(kind: UploadKind, file: File, crop?: Crop) {
+    setPick(null);
     const field: Field = kind === "avatar" ? "photo" : "cover";
     setErrors((e) => ({ ...e, [field]: undefined }));
     setBusy(kind);
-    const r = await uploadProfileImage(kind, file, currentUserId());
+    const r = await uploadProfileImage(kind, file, currentUserId(), crop);
     setBusy(false);
     if ("error" in r) return setErrors((e) => ({ ...e, [field]: UPLOAD_MESSAGES[r.error] }));
     if (kind === "avatar") {
@@ -419,6 +424,19 @@ function ProfileEditor({
       </h2>
       <p className="mt-1.5 mb-5 text-sm text-muted">{t.profile.editHint}</p>
 
+      {pick && (
+        <ImageCropper
+          key={`${pick.kind}-${pick.file.name}-${pick.file.lastModified}`}
+          file={pick.file}
+          aspect={ASPECT[pick.kind]}
+          round={pick.kind === "avatar"}
+          title={pick.kind === "avatar" ? t.profile.cropPhoto : t.profile.cropCover}
+          onApply={(crop) => void upload(pick.kind, pick.file, crop)}
+          onCancel={() => setPick(null)}
+          onInvalid={() => void upload(pick.kind, pick.file)}
+        />
+      )}
+
       <Tabs
         label={t.profile.editTitle}
         value={tab}
@@ -435,7 +453,7 @@ function ProfileEditor({
             draft={draft}
             busy={busy}
             error={errors.photo}
-            onFile={(f) => upload("avatar", f)}
+            onFile={(f) => f && setPick({ kind: "avatar", file: f })}
             onRemove={() => {
               dropUnsaved(draft.avatarUrl, saved.avatarUrl);
               set({ avatarUrl: null });
@@ -487,7 +505,7 @@ function ProfileEditor({
           set={set}
           busy={busy}
           errors={errors}
-          onCover={(f) => upload("banner", f)}
+          onCover={(f) => f && setPick({ kind: "banner", file: f })}
           onRemoveCover={() => {
             dropUnsaved(draft.bannerUrl, saved.bannerUrl);
             set({ bannerUrl: null });

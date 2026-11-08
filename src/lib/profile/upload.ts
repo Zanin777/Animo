@@ -5,6 +5,7 @@
 // perde os metadados da foto original (como a localização do celular).
 import { getSupabase } from "@/lib/supabase/client";
 import { SUPABASE_URL } from "@/lib/supabase/env";
+import { cropRect, type Crop } from "./crop";
 
 export type UploadKind = "avatar" | "banner";
 
@@ -18,14 +19,12 @@ const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
 
 export type UploadError = "type" | "size" | "decode" | "login" | "reserved" | "network";
 
-/** Recorta no centro (cover) para o tamanho alvo e devolve um WebP. */
-async function toWebp(file: File, w: number, h: number): Promise<Blob> {
+export const ASPECT: Record<UploadKind, number> = { avatar: SPEC.avatar.w / SPEC.avatar.h, banner: SPEC.banner.w / SPEC.banner.h };
+
+/** Recorta (no centro, ou onde o usuário ajustou) para o tamanho alvo e devolve um WebP. */
+async function toWebp(file: File, w: number, h: number, crop?: Crop): Promise<Blob> {
   const bmp = await createImageBitmap(file);
-  const scale = Math.max(w / bmp.width, h / bmp.height);
-  const sw = w / scale;
-  const sh = h / scale;
-  const sx = (bmp.width - sw) / 2;
-  const sy = (bmp.height - sh) / 2;
+  const { sx, sy, sw, sh } = crop ?? cropRect(bmp.width, bmp.height, w / h, 1, bmp.width / 2, bmp.height / 2);
   const canvas = document.createElement("canvas");
   canvas.width = w;
   canvas.height = h;
@@ -40,7 +39,7 @@ async function toWebp(file: File, w: number, h: number): Promise<Blob> {
 }
 
 /** Sobe a imagem para <bucket>/<id-do-usuário>/<tipo>-<data>.webp e devolve o caminho público. */
-export async function uploadProfileImage(kind: UploadKind, file: File, userId: string | null): Promise<{ path: string } | { error: UploadError }> {
+export async function uploadProfileImage(kind: UploadKind, file: File, userId: string | null, crop?: Crop): Promise<{ path: string } | { error: UploadError }> {
   if (!ACCEPTED.includes(file.type)) return { error: "type" };
   if (file.size > MAX_INPUT_BYTES) return { error: "size" };
   const sb = getSupabase();
@@ -48,7 +47,7 @@ export async function uploadProfileImage(kind: UploadKind, file: File, userId: s
   const { bucket, w, h } = SPEC[kind];
   let blob: Blob;
   try {
-    blob = await toWebp(file, w, h);
+    blob = await toWebp(file, w, h, crop);
   } catch {
     return { error: "decode" };
   }
