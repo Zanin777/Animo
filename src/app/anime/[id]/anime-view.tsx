@@ -93,7 +93,7 @@ export function AnimeView() {
             <button
               type="button"
               onClick={() => diary.plusOneEpisode(anime)}
-              className="press cursor-pointer rounded-md bg-card px-2.5 py-1.5 text-xs font-bold text-fg hover:text-accent"
+              className="press cursor-pointer rounded-md bg-card px-2.5 py-1.5 text-xs font-bold text-fg hover:text-detail"
             >
               {t.home.plusOne}
             </button>

@@ -39,7 +39,7 @@ export function NavShell({ path }: { path: string | null }) {
     <>
       {/* desktop: navbar no topo */}
       <header className="sticky top-0 z-20 hidden border-b border-line bg-bg md:block">
-        <nav className="mx-auto flex max-w-3xl items-center gap-6 px-4 py-3">
+        <nav className="mx-auto flex max-w-3xl items-center gap-6 px-4 py-3 min-[1120px]:max-w-[66rem]">
           <Link href="/" className="mr-auto font-display text-2xl leading-none">
             aniora<span className="text-accent">.</span>
           </Link>
@@ -49,7 +49,7 @@ export function NavShell({ path }: { path: string | null }) {
                 key={it.href}
                 href={it.href}
                 onClick={onLogClick}
-                className="press inline-flex items-center gap-1 rounded-md bg-accent py-1.5 pr-3.5 pl-2.5 text-sm font-bold text-white hover:bg-accent-ink"
+                className="press inline-flex items-center gap-1 rounded-md bg-action py-1.5 pr-3.5 pl-2.5 text-sm font-bold text-on-action hover:bg-action-ink"
               >
                 <it.Icon size={16} strokeWidth={2.25} />
                 {it.label}
@@ -59,7 +59,7 @@ export function NavShell({ path }: { path: string | null }) {
                 key={it.href}
                 href={it.href}
                 aria-current={isActive(path, it.href) ? "page" : undefined}
-                className={`text-sm underline-offset-[6px] transition-colors ${isActive(path, it.href) ? "text-fg underline decoration-accent decoration-2" : "text-muted hover:text-fg"}`}
+                className={`text-sm underline-offset-[6px] transition-colors ${isActive(path, it.href) ? "text-fg underline decoration-active decoration-2" : "text-muted hover:text-fg"}`}
               >
                 {it.label}
               </Link>
@@ -86,12 +86,12 @@ export function NavShell({ path }: { path: string | null }) {
               className={`press grid min-w-14 justify-items-center gap-0.5 ${active ? "font-bold text-fg" : "text-muted"}`}
             >
               {"primary" in it ? (
-                <span className="grid h-[30px] w-[42px] place-items-center rounded-md bg-accent text-white">
+                <span className="grid h-[30px] w-[42px] place-items-center rounded-md bg-action text-on-action">
                   <it.Icon size={20} strokeWidth={2.25} />
                 </span>
               ) : (
                 <span className="relative grid h-[30px] place-items-center">
-                  <it.Icon size={22} className={active ? "text-accent" : undefined} />
+                  <it.Icon size={22} className={active ? "text-active" : undefined} />
                 </span>
               )}
               {it.label}

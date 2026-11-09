@@ -55,7 +55,7 @@ export function ListView() {
                   caption={
                     <button
                       type="button"
-                      className="cursor-pointer hover:text-accent"
+                      className="cursor-pointer hover:text-detail"
                       onClick={(e) => {
                         e.preventDefault();
                         diary.removeFromList(list.id, a.id);

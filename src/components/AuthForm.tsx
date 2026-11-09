@@ -135,7 +135,7 @@ export function AuthForm({ mode }: { mode: "signin" | "signup" }) {
         </button>
         <p className="text-sm text-muted">
           {signup ? t.auth.haveAccount : t.auth.noAccount}{" "}
-          <Link href={signup ? "/entrar" : "/cadastro"} className="text-accent underline">
+          <Link href={signup ? "/entrar" : "/cadastro"} className="text-detail underline">
             {signup ? t.auth.signinCta : t.auth.signupCta}
           </Link>
         </p>

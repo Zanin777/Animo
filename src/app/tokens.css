@@ -16,6 +16,15 @@
   --color-card: var(--card);
   --color-accent: var(--accent);
   --color-accent-ink: var(--accent-ink);
+  /* papéis da cor (2026-11-09, paleta V2 · Dupla).
+     action = botão principal · active = aba/menu ativo, foco, seleção ·
+     detail = progresso, setas, links pequenos · accent = notas (selo) e perfil */
+  --color-action: var(--action);
+  --color-action-ink: var(--action-ink);
+  --color-on-action: var(--on-action);
+  --color-active: var(--active);
+  --color-detail: var(--detail);
+  --color-link-line: var(--link-line);
 
   /* paleta crua */
   --color-crimson: #c41e3a;
@@ -59,4 +68,26 @@
   --accent: #e0445a;
   --accent-ink: #ec6276;
   color-scheme: dark;
+}
+
+/* ───────── papéis da cor (paleta V2 · Dupla, aprovada em 2026-11-09) ─────────
+   Rosa age: botão principal, notas (selo), favoritos.
+   Turquesa mostra onde você está: aba e menu ativos, foco, seleção, progresso, setas, links. */
+:root {
+  --action: var(--accent);
+  --action-ink: var(--accent-ink);
+  --on-action: #fff;
+  --active: var(--teal);
+  --detail: var(--teal);
+  --link-line: var(--teal);
+  /* turquesa: vibrante no escuro; mais escura no claro para ter contraste no papel */
+  --teal: #0b8273;
+}
+:root[data-theme="dark"] {
+  --teal: #43d9c3;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --teal: #43d9c3;
+  }
 }

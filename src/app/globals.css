@@ -7,18 +7,18 @@ body {
   font-family: var(--font-sans);
   line-height: 1.55;
   -webkit-tap-highlight-color: transparent;
-  caret-color: var(--accent);
-  accent-color: var(--accent);
+  caret-color: var(--active);
+  accent-color: var(--active);
   scrollbar-color: color-mix(in srgb, var(--muted) 45%, transparent) transparent;
 }
 
 /* superfícies do navegador com a paleta, não com o padrão do sistema */
 ::selection {
-  background: color-mix(in srgb, var(--accent) 28%, transparent);
+  background: color-mix(in srgb, var(--active) 28%, transparent);
   color: var(--fg);
 }
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--active);
   outline-offset: 2px;
 }
 /* .poster-link tem foco próprio (o pôster cresce e ganha contorno) */
@@ -106,7 +106,7 @@ a {
   .poster-link:hover > .poster-lift {
     transform: translateY(-4px) scale(1.07);
     box-shadow:
-      0 0 0 2px var(--accent),
+      0 0 0 2px var(--active),
       0 18px 36px -12px rgba(0, 0, 0, 0.6);
   }
 }
@@ -117,7 +117,7 @@ a {
 .poster-link:focus-visible > .poster-lift {
   transform: translateY(-4px) scale(1.07);
   box-shadow:
-    0 0 0 2px var(--accent),
+    0 0 0 2px var(--active),
     0 18px 36px -12px rgba(0, 0, 0, 0.6);
 }
 @media (prefers-reduced-motion: reduce) {

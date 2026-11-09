@@ -30,16 +30,16 @@ export function Muted({ children, className = "" }: { children: ReactNode; class
 }
 
 export const btnPrimary =
-  "press inline-flex items-center justify-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-bold text-white hover:bg-accent-ink disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer";
+  "press inline-flex items-center justify-center gap-1.5 rounded-md bg-action px-4 py-2 text-sm font-bold text-on-action hover:bg-action-ink disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer";
 /** Ação secundária: sem borda; ganha fundo leve ao passar o mouse. */
 export const btnGhost =
   "press inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-fg hover:bg-card disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer";
 /** Link de texto para ações pequenas ("Ver catálogo completo"). */
-export const linkAction = "text-sm text-muted underline decoration-line underline-offset-4 hover:text-fg hover:decoration-fg";
+export const linkAction = "text-sm text-muted underline decoration-link-line underline-offset-4 hover:text-fg hover:decoration-fg";
 /** Superfície para agrupar o que precisa ficar junto (formulários, números). Sem borda. */
 export const card = "rounded-lg bg-card";
 export const input =
-  "w-full rounded-md border border-line bg-card px-3 py-2 text-base outline-none transition-colors focus:border-accent";
+  "w-full rounded-md border border-line bg-card px-3 py-2 text-base outline-none transition-colors focus:border-active";
 /** Lista com linhas finas entre os itens (no lugar de um card por item). */
 export const rows = "divide-y divide-line border-y border-line";
 /** Etiqueta pequena e discreta (ex.: "revi", "visto"). */

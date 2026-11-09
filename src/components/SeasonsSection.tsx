@@ -49,7 +49,7 @@ export function SeasonsSection({ anime }: { anime: Anime }) {
                 on ? "bg-card" : "hover:bg-card"
               }`}
             >
-              <Poster anime={s.anime} size="xs" className={on ? "outline-2 outline-offset-2 outline-accent" : "opacity-60"} />
+              <Poster anime={s.anime} size="xs" className={on ? "outline-2 outline-offset-2 outline-active" : "opacity-60"} />
               <span className={`text-xs leading-tight ${on ? "font-bold text-fg" : "text-muted"}`}>{t.seasons.short(s.season, s.part)}</span>
               <span className="text-[10px] leading-tight text-muted">
                 {t.seasons.eps(s.anime.episodes)}
@@ -66,7 +66,7 @@ export function SeasonsSection({ anime }: { anime: Anime }) {
           {selected.anime.year && <span className="text-muted"> · {selected.anime.year}</span>}
         </p>
         {selected.anime.id !== anime.id && (
-          <Link href={`/anime/${selected.anime.id}`} className="text-sm text-accent underline">
+          <Link href={`/anime/${selected.anime.id}`} className="text-sm text-detail underline">
             {t.seasons.open}
           </Link>
         )}

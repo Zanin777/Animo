@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import type { Anime } from "@/lib/catalog/provider";
 import type { AnimeStat } from "@/lib/community/types";
 import { t } from "@/messages";
@@ -31,8 +31,31 @@ export function Tabs<K extends string>({
   onChange: (k: K) => void;
   label: string;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+  // abas que não cabem (celular): a ponta direita esmaece até chegar no fim
+  const [more, setMore] = useState(false);
+  const update = useCallback(() => {
+    const el = ref.current;
+    if (el) setMore(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  }, []);
+  useEffect(() => {
+    update();
+    const el = ref.current;
+    if (!el) return;
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [update]);
+
   return (
-    <div className="no-scrollbar mb-4 flex gap-5 overflow-x-auto border-b border-line" role="tablist" aria-label={label}>
+    <div
+      ref={ref}
+      onScroll={update}
+      className="no-scrollbar mb-4 flex gap-5 overflow-x-auto border-b border-line"
+      style={more ? { maskImage: "linear-gradient(to right, #000 80%, transparent)", WebkitMaskImage: "linear-gradient(to right, #000 80%, transparent)" } : undefined}
+      role="tablist"
+      aria-label={label}
+    >
       {tabs.map(([k, text]) => (
         <button
           key={k}
@@ -41,7 +64,7 @@ export function Tabs<K extends string>({
           aria-selected={value === k}
           onClick={() => onChange(k)}
           className={`-mb-px flex-none cursor-pointer border-b-2 pb-2 text-sm whitespace-nowrap transition-colors ${
-            value === k ? "border-accent font-bold text-fg" : "border-transparent text-muted hover:text-fg"
+            value === k ? "border-active font-bold text-fg" : "border-transparent text-muted hover:text-fg"
           }`}
         >
           {text}

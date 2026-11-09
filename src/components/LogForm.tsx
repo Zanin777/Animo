@@ -145,7 +145,7 @@ function Step({ n, title, disabled, children }: { n: number; title: string; disa
   return (
     <section className={`${card} mb-3 p-4 ${disabled ? "opacity-40" : ""}`} inert={disabled}>
       <h2 className="mb-3 text-sm font-bold">
-        <span className="mr-1.5 font-display font-normal text-accent">{n}</span>
+        <span className="mr-1.5 font-display font-normal text-detail">{n}</span>
         {title}
       </h2>
       {children}

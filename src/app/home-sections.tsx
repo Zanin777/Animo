@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { DemoBadge, RankRow, Tabs, TrendingCard } from "@/components/community";
+import { RankRow, Tabs, TrendingCard } from "@/components/community";
 import { Hanko } from "@/components/Hanko";
 import { Poster } from "@/components/Poster";
+import { Rail } from "@/components/Rail";
 import { Muted, SectionTitle, linkAction, rows as ruledRows } from "@/components/ui";
 import type { Anime } from "@/lib/catalog/provider";
 import type { LocalCatalog } from "@/lib/catalog/local";
@@ -53,11 +54,11 @@ export function CatalogHighlights({ catalog }: { catalog: LocalCatalog }) {
   return (
     <section>
       <SectionTitle action={<Link href="/buscar" className={linkAction}>{t.community.seeCatalog}</Link>}>{t.home.highlightsTitle}</SectionTitle>
-      <div className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pt-3 pb-3">
+      <Rail label={t.home.highlightsTitle}>
         {items.map((a) => (
           <TrendingCard key={a.id} anime={a} />
         ))}
-      </div>
+      </Rail>
     </section>
   );
 }
@@ -73,11 +74,11 @@ export function RecentReleases({ catalog, year }: { catalog: LocalCatalog; year:
   return (
     <section>
       <SectionTitle>{t.home.recentTitle}</SectionTitle>
-      <div className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pt-3 pb-3">
+      <Rail label={t.home.recentTitle}>
         {items.map((a) => (
           <TrendingCard key={a.id} anime={a} />
         ))}
-      </div>
+      </Rail>
     </section>
   );
 }
@@ -87,10 +88,7 @@ export function TrendingSection({ snap, catalog }: Props) {
   const stats = tab === "popular" ? trending(snap.events, 12) : trendingAmongFriends(snap.events, snap.following, 12);
   return (
     <section>
-      <SectionTitle action={<Link href="/buscar" className={linkAction}>{t.community.seeCatalog}</Link>}>
-        {t.community.trendingTitle}
-        <DemoBadge show={snap.demo} />
-      </SectionTitle>
+      <SectionTitle action={<Link href="/buscar" className={linkAction}>{t.community.seeCatalog}</Link>}>{t.community.trendingTitle}</SectionTitle>
       <Tabs
         label={t.community.trendingTitle}
         value={tab}
@@ -103,14 +101,14 @@ export function TrendingSection({ snap, catalog }: Props) {
       {stats.length === 0 ? (
         <Muted>{tab === "friends" ? t.community.friendsEmpty : t.community.empty}</Muted>
       ) : (
-        <div className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pt-3 pb-3">
+        <Rail label={t.community.trendingTitle}>
           {stats.map((s) => {
             const a = catalog.get(s.animeId);
             if (!a) return null;
             const extra = "friendsWhoRecommend" in s ? t.community.friendsRecommend(s.friendsWhoRecommend as number) : undefined;
             return <TrendingCard key={s.animeId} anime={a} stat={s} extra={extra} />;
           })}
-        </div>
+        </Rail>
       )}
     </section>
   );
@@ -120,16 +118,16 @@ type RankTab = "top" | "watched" | "topEp" | "watchedEp";
 
 export function RankingsSection({ snap, catalog }: Props) {
   const [tab, setTab] = useState<RankTab>("top");
+  const [all, setAll] = useState(false);
+  const n = all ? 10 : 5;
   const isEp = tab === "topEp" || tab === "watchedEp";
-  const rows = tab === "top" ? topRated(snap.events, 10) : tab === "watched" ? mostWatched(snap.events, 10) : [];
-  const epRows = tab === "topEp" ? topEpisodes(snap.episodeEvents, 10) : tab === "watchedEp" ? mostWatchedEpisodes(snap.episodeEvents, 10) : [];
+  const rows = tab === "top" ? topRated(snap.events, n) : tab === "watched" ? mostWatched(snap.events, n) : [];
+  const epRows = tab === "topEp" ? topEpisodes(snap.episodeEvents, n) : tab === "watchedEp" ? mostWatchedEpisodes(snap.episodeEvents, n) : [];
+  const hasMore = (isEp ? (tab === "topEp" ? topEpisodes(snap.episodeEvents, 6) : mostWatchedEpisodes(snap.episodeEvents, 6)) : tab === "top" ? topRated(snap.events, 6) : mostWatched(snap.events, 6)).length > 5;
   const empty = isEp ? epRows.length === 0 : rows.length === 0;
   return (
     <section>
-      <SectionTitle>
-        {t.community.rankingsTitle}
-        <DemoBadge show={snap.demo} />
-      </SectionTitle>
+      <SectionTitle>{t.community.rankingsTitle}</SectionTitle>
       <Tabs
         label={t.community.rankingsTitle}
         value={tab}
@@ -178,18 +176,27 @@ export function RankingsSection({ snap, catalog }: Props) {
           })}
         </ol>
       )}
+      {!empty && (hasMore || all) && <MoreToggle open={all} onToggle={() => setAll(!all)} more={t.home.showTop10} less={t.home.showTop5} />}
     </section>
   );
 }
 
+/** "Ver mais / ver menos" no fim de uma lista curta. */
+function MoreToggle({ open, onToggle, more, less }: { open: boolean; onToggle: () => void; more: string; less: string }) {
+  return (
+    <button type="button" onClick={onToggle} aria-expanded={open} className={`${linkAction} mt-3 cursor-pointer`}>
+      {open ? less : more}
+    </button>
+  );
+}
+
 export function ActivitySection({ snap, catalog }: Props) {
-  const items = activity(snap, 8);
+  const [all, setAll] = useState(false);
+  const full = activity(snap, 10);
+  const items = all ? full : full.slice(0, 5);
   return (
     <section>
-      <SectionTitle>
-        {t.community.activityTitle}
-        <DemoBadge show={snap.demo} />
-      </SectionTitle>
+      <SectionTitle>{t.community.activityTitle}</SectionTitle>
       {items.length === 0 ? (
         <Muted>{t.community.empty}</Muted>
       ) : (
@@ -225,28 +232,26 @@ export function ActivitySection({ snap, catalog }: Props) {
           })}
         </ul>
       )}
+      {full.length > 5 && <MoreToggle open={all} onToggle={() => setAll(!all)} more={t.home.showMore} less={t.home.showLess} />}
     </section>
   );
 }
 
-export function FeaturedListsSection({ snap, catalog }: Props) {
+export function FeaturedListsSection({ snap, catalog, narrow = false }: Props & { narrow?: boolean }) {
   const lists = [...snap.lists].sort((a, b) => b.likes - a.likes);
   return (
     <section>
-      <SectionTitle>
-        {t.community.listsTitle}
-        <DemoBadge show={snap.demo} />
-      </SectionTitle>
+      <SectionTitle>{t.community.listsTitle}</SectionTitle>
       {lists.length === 0 ? (
         <Muted>{t.community.empty}</Muted>
       ) : (
-        <div className="grid gap-x-8 gap-y-5 sm:grid-cols-2">
+        <div className={`grid gap-x-8 gap-y-5 sm:grid-cols-2 ${narrow ? "min-[1120px]:grid-cols-1" : ""}`}>
           {lists.map((l) => (
             <article key={l.id} className="flex items-center gap-4">
-              <div className="flex w-28 flex-none -space-x-7">
-                {l.animeIds.slice(0, 4).map((id) => {
+              <div className="flex w-36 flex-none -space-x-9">
+                {l.animeIds.slice(0, 3).map((id) => {
                   const a = catalog.get(id);
-                  return a ? <Poster key={id} anime={a} size="xs" className="w-11 ring-2 ring-bg" /> : null;
+                  return a ? <Poster key={id} anime={a} size="xs" className="w-[3.75rem] ring-2 ring-bg" /> : null;
                 })}
               </div>
               <div className="min-w-0">
