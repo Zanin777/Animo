@@ -1,4 +1,4 @@
-// Junta os caches do TMDB (capas e temporadas) nos itens do catálogo.
+// Junta os caches do TMDB (ids e temporadas) nos itens do catálogo. A capa vem do AniList (anilist.mjs).
 // Usado por import-catalog, fetch-covers e fetch-seasons, para o resultado
 // ser o mesmo qualquer que seja o script rodado por último.
 
@@ -12,7 +12,6 @@ export function applyTmdb(anime, covers, seasons) {
   for (const a of anime) {
     const c = covers[a.id];
     const s = seasons[a.id];
-    a.cover = validPath(s?.posterPath) ?? validPath(c?.posterPath);
     a.tmdb = null;
     if (c?.tmdbId && c.type === "movie") {
       a.tmdb = { id: c.tmdbId, type: "movie" };

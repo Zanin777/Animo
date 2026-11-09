@@ -1,6 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
+import { useAuth } from "@/lib/auth";
+import { closeLog } from "./LogDrawer";
 import { AnimeSearch } from "@/components/AnimeSearch";
 import { Poster } from "@/components/Poster";
 import { StarRating } from "@/components/StarRating";
@@ -24,8 +27,25 @@ type Props = {
   onClearPreset?: () => void;
 };
 
+/** Só quem está logado registra; visitante vê o convite para entrar. */
+export function LogForm(props: Props) {
+  const auth = useAuth();
+  if (auth.status === "loading") return null;
+  if (auth.status === "guest") {
+    return (
+      <div className={`${card} grid justify-items-start gap-3 p-4`}>
+        <p>{t.log.loginRequired}</p>
+        <Link href="/entrar" className={btnPrimary} onClick={closeLog}>
+          {t.auth.signinCta}
+        </Link>
+      </div>
+    );
+  }
+  return <LogFormFields {...props} />;
+}
+
 /** Registrar em 3 toques: anime → nota → salvar. O resto é opcional. */
-export function LogForm({ presetId, onSaved, onClearPreset }: Props) {
+function LogFormFields({ presetId, onSaved, onClearPreset }: Props) {
   const catalog = useCatalog();
   const [picked, setPicked] = useState<Anime | null>(null);
   const [cleared, setCleared] = useState(false);

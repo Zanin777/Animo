@@ -21,7 +21,8 @@ npm run lint
 ## Créditos de terceiros
 
 - Catálogo: [anime-offline-database](https://github.com/manami-project/anime-offline-database), ODbL 1.0 + DbCL 1.0 (ver `docs/catalogo.md`)
-- Capas: [TMDB](https://www.themoviedb.org), uso não comercial. Este produto usa a API do TMDB, mas não é endossado nem certificado pelo TMDB.
+- Capas: [AniList](https://anilist.co) (API GraphQL; uso comercial pede autorização do AniList).
+- Episódios (nome, imagem): [TMDB](https://www.themoviedb.org), uso não comercial. Este produto usa a API do TMDB, mas não é endossado nem certificado pelo TMDB.
 - `src/components/SlidingNumber.tsx`: adaptado do [Motion Primitives](https://github.com/ibelick/motion-primitives), MIT (`third-party/motion-primitives.LICENSE.md`)
 - Gaveta de registro: [vaul](https://github.com/emilkowalski/vaul), MIT (dependência npm)
 

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { MouseEvent } from "react";
+import { useAuth } from "@/lib/auth";
 import { t } from "@/messages";
 import { IconHome, IconLists, IconPlus, IconProfile, IconSearch } from "./Icons";
 import { openLog } from "./LogDrawer";
@@ -35,6 +36,9 @@ export function AppNav() {
 
 /** Mesma navegação sem item ativo: fallback do Suspense no prerender. */
 export function NavShell({ path }: { path: string | null }) {
+  // visitante: "Perfil" vira o botão "Entrar"
+  const guest = useAuth().status === "guest";
+  const items = ITEMS.map((it) => (guest && it.href === "/perfil" ? { ...it, href: "/entrar", label: t.nav.signin } : it));
   return (
     <>
       {/* desktop: navbar no topo */}
@@ -43,7 +47,7 @@ export function NavShell({ path }: { path: string | null }) {
           <Link href="/" className="mr-auto font-display text-2xl leading-none">
             aniora<span className="text-accent">.</span>
           </Link>
-          {ITEMS.map((it) =>
+          {items.map((it) =>
             "primary" in it ? (
               <Link
                 key={it.href}
@@ -59,7 +63,13 @@ export function NavShell({ path }: { path: string | null }) {
                 key={it.href}
                 href={it.href}
                 aria-current={isActive(path, it.href) ? "page" : undefined}
-                className={`text-sm underline-offset-[6px] transition-colors ${isActive(path, it.href) ? "text-fg underline decoration-active decoration-2" : "text-muted hover:text-fg"}`}
+
+                className={
+                  it.href === "/entrar"
+                    ? "press rounded-md border border-line px-3 py-1.5 text-sm font-bold text-fg hover:bg-card"
+                    : `text-sm underline-offset-[6px] transition-colors ${isActive(path, it.href) ? "text-fg underline decoration-active decoration-2" : "text-muted hover:text-fg"}`
+                }
+
               >
                 {it.label}
               </Link>
@@ -75,7 +85,7 @@ export function NavShell({ path }: { path: string | null }) {
         className="fixed inset-x-0 bottom-0 z-20 flex justify-around border-t border-line bg-bg pt-1.5 text-[11px] md:hidden"
         style={{ paddingBottom: "calc(8px + env(safe-area-inset-bottom))" }}
       >
-        {ITEMS.map((it) => {
+        {items.map((it) => {
           const active = isActive(path, it.href);
           return (
             <Link

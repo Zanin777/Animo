@@ -13,13 +13,14 @@ type Props = {
   className?: string;
 };
 
-// Só caminhos de pôster do TMDB; qualquer outra coisa cai no pôster tipográfico.
+// Só nomes de arquivo de capa do AniList; qualquer outra coisa cai no pôster tipográfico.
 const COVER_PATH = /^\/[A-Za-z0-9_-]{5,64}\.(jpg|png)$/;
+const COVER_BASE = "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large";
 
 /**
- * Capa do TMDB quando existe; senão (ou se a imagem falhar) o pôster
+ * Capa do AniList quando existe; senão (ou se a imagem falhar) o pôster
  * tipográfico da direção de arte. A imagem passa pelo otimizador do Next,
- * então o navegador do usuário nunca fala direto com o TMDB.
+ * então o navegador do usuário nunca fala direto com o AniList.
  */
 export function Poster({ anime, size = "md", className = "" }: Props) {
   const [failed, setFailed] = useState(false);
@@ -44,7 +45,7 @@ export function Poster({ anime, size = "md", className = "" }: Props) {
       </div>
       {cover && (
         <Image
-          src={`https://image.tmdb.org/t/p/w342${cover}`}
+          src={`${COVER_BASE}${cover}`}
           alt=""
           fill
           sizes={xs ? "64px" : "(min-width: 768px) 180px, 33vw"}
