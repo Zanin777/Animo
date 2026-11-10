@@ -2,7 +2,8 @@ import { describe, expect, test } from "vitest";
 import generated from "./catalog/catalog.generated.json";
 import type { Anime } from "./catalog/provider";
 import { rowToAnime, type CatalogRow } from "./catalog/seed";
-import { seasonsOf } from "./catalog/seasons";
+import { rankMatches } from "./catalog/provider";
+import { collapseToSeries, seasonsOf, seriesIndex } from "./catalog/seasons";
 
 const catalog = (generated.anime as CatalogRow[]).map(rowToAnime);
 const get = (id: string) => catalog.find((a) => a.id === id)!;
@@ -33,3 +34,27 @@ describe("temporadas de uma série", () => {
     expect(ids.every((i) => /^[a-z0-9-]{1,80}$/.test(i))).toBe(true);
   });
 });
+
+describe("séries: um anime só para as temporadas", () => {
+  const index = seriesIndex(catalog);
+  const byId = new Map(catalog.map((a) => [a.id, a]));
+  const lookup = (id: string) => byId.get(id) ?? null;
+
+  test("qualquer temporada aponta para a 1ª", () => {
+    expect(index.headOf("shingeki-no-kyojin-season-3")).toBe("shingeki-no-kyojin");
+    expect(index.headOf("shingeki-no-kyojin")).toBe("shingeki-no-kyojin");
+    expect(index.seasonsOf("shingeki-no-kyojin-season-2").map((s) => s.anime.id)[0]).toBe("shingeki-no-kyojin");
+  });
+  test("anime sozinho e filme ficam como estão", () => {
+    expect(index.headOf("kimi-no-na-wa")).toBe("kimi-no-na-wa");
+    expect(index.seasonsOf("kimi-no-na-wa")).toEqual([]);
+  });
+  test("busca mostra a série uma vez, pela 1ª temporada", () => {
+    const ids = collapseToSeries(rankMatches(catalog, "shingeki no kyojin", 60), index, lookup).map((a) => a.id);
+    expect(ids).toContain("shingeki-no-kyojin");
+    expect(ids.filter((id) => index.headOf(id) === "shingeki-no-kyojin")).toHaveLength(1);
+    // buscando pelo nome da T3, aparece a série
+    expect(collapseToSeries(rankMatches(catalog, "shingeki no kyojin season 3", 20), index, lookup)[0].id).toBe("shingeki-no-kyojin");
+  });
+});
+

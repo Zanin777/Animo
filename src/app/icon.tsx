@@ -1,4 +1,4 @@
-import { sealImage } from "./_icon/seal";
+import { appIconImage, faviconImage } from "./_icon/seal";
 
 // /icon/favicon (aba do navegador) e /icon/app-192, /icon/app-512 (manifest, Android).
 export function generateImageMetadata() {
@@ -11,7 +11,7 @@ export function generateImageMetadata() {
 
 export default async function Icon({ id }: { id: Promise<string | number> }) {
   const which = String(await id);
-  if (which === "app-192") return sealImage(192, true);
-  if (which === "app-512") return sealImage(512, true);
-  return sealImage(48, false);
+  if (which === "app-192") return appIconImage(192);
+  if (which === "app-512") return appIconImage(512);
+  return faviconImage(48);
 }

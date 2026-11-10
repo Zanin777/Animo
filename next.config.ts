@@ -9,6 +9,8 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       new URL("https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/**"),
       new URL("https://image.tmdb.org/t/p/w300/**"),
+      // capas trocadas por quem é Premium (pôsteres oficiais do TMDB)
+      new URL("https://image.tmdb.org/t/p/w342/**"),
       ...(/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "")
         ? ["avatars", "banners"].map((b) => new URL(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${b}/**`))
         : []),

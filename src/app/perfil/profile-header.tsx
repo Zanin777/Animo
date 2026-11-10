@@ -35,7 +35,15 @@ import type { FollowInfo } from "@/lib/social/follows";
 import { SUPABASE_ENABLED } from "@/lib/supabase/env";
 import { t } from "@/messages";
 
-type Stat = { value: number; label: string };
+/** href = o número leva a uma lista (seguidores, seguindo) */
+type Stat = { value: number; label: string; href?: string };
+
+/** Link invisível por cima da célula do número (mantém a lista <dl> válida). */
+function StatLink({ s }: { s: Stat }) {
+  return s.href ? (
+    <Link href={s.href} className="absolute inset-0 rounded-[inherit] outline-offset-[-2px]" aria-label={`${s.value} ${s.label}`} />
+  ) : null;
+}
 
 const NAME_MAX = 50;
 const BIO_MAX = 300;
@@ -102,11 +110,12 @@ export function ProfileHeader({
       {/* celular: números numa linha (no computador ficam na coluna ao lado) */}
       <dl className="mt-6 grid grid-cols-4 divide-x divide-line border-y border-line py-3 text-center md:hidden">
         {stats.map((s) => (
-          <div key={s.label} className="px-1">
+          <div key={s.label} className={`relative px-1 ${s.href ? "transition-colors hover:bg-card" : ""}`}>
             <dd className="flex justify-center font-display text-2xl leading-none text-accent">
               <SlidingNumber value={s.value} />
             </dd>
-            <dt className="mt-1 text-[11px] leading-tight text-muted">{s.label}</dt>
+            <dt className={`mt-1 text-[11px] leading-tight text-muted ${s.href ? "underline decoration-line underline-offset-2" : ""}`}>{s.label}</dt>
+            <StatLink s={s} />
           </div>
         ))}
       </dl>
@@ -255,11 +264,12 @@ function SidePanel({ stats, side, withBanner }: { stats: Stat[]; side: ProfileSi
     <aside className={`hidden content-start gap-6 md:grid ${withBanner ? "pt-4" : "pt-1"}`}>
       <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-line bg-line">
         {stats.map((s) => (
-          <div key={s.label} className="bg-bg px-3 py-3">
+          <div key={s.label} className={`relative bg-bg px-3 py-3 ${s.href ? "transition-colors hover:bg-card" : ""}`}>
             <dd className="font-display text-2xl leading-none text-accent">
               <SlidingNumber value={s.value} />
             </dd>
-            <dt className="mt-1 text-xs leading-tight text-muted">{s.label}</dt>
+            <dt className={`mt-1 text-xs leading-tight text-muted ${s.href ? "underline decoration-line underline-offset-2" : ""}`}>{s.label}</dt>
+            <StatLink s={s} />
           </div>
         ))}
       </dl>

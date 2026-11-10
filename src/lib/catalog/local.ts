@@ -4,6 +4,7 @@ import { useMemo, useSyncExternalStore } from "react";
 import { diary, useDiary } from "@/lib/diary/store";
 import { rankMatches, type Anime, type AnimeCatalogProvider, type NewAnimeInput } from "./provider";
 import { loadCatalogFile, type CatalogSource } from "./seed";
+import { collapseToSeries, seriesIndex, type SeriesIndex } from "./seasons";
 
 type Loaded = { source: CatalogSource; anime: Anime[] };
 
@@ -35,6 +36,8 @@ export type LocalCatalog = AnimeCatalogProvider & {
   all: Anime[];
   source: CatalogSource | null;
   get(id: string): Anime | null;
+  /** séries: id de qualquer temporada → 1ª temporada, e a lista de temporadas */
+  series: SeriesIndex;
 };
 
 /** Catálogo local: arquivo importado + animes que o usuário adicionou. */
@@ -47,9 +50,14 @@ export function createLocalCatalog(base: Loaded | null, custom: Anime[]): LocalC
     all: base?.anime ?? NONE,
     source: base?.source ?? null,
     get: (id) => byId.get(id) ?? null,
+    series: seriesIndex(base?.anime ?? NONE),
+    // a busca mostra a série uma vez só (pela 1ª temporada), mesmo que o nome bata com a T3
     search: async (q, opts) => {
       const b = base ?? (await ensureLoaded());
-      return rankMatches([...b.anime, ...custom], q, opts?.limit);
+      const limit = opts?.limit ?? 20;
+      const ranked = rankMatches([...b.anime, ...custom], q, limit * 3);
+      const index = seriesIndex(b.anime);
+      return collapseToSeries(ranked, index, (id) => byId.get(id) ?? b.anime.find((a) => a.id === id) ?? null).slice(0, limit);
     },
     getById: async (id) => byId.get(id) ?? (await ensureLoaded()).anime.find((a) => a.id === id) ?? null,
     create: async (input: NewAnimeInput) => diary.addCustomAnime(input),

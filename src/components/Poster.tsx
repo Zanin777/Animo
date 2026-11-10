@@ -1,13 +1,15 @@
 "use client";
 
 import Image from "next/image";
-import { useState, ViewTransition } from "react";
+import { useContext, useState, ViewTransition } from "react";
+import { CoverOverrides } from "@/lib/covers/choices";
+import { TMDB_POSTER_BASE, TMDB_POSTER_PATH } from "@/lib/covers/types";
 import type { Anime } from "@/lib/catalog/provider";
 import { posterStyle, posterTitleSize } from "@/lib/poster";
 import { t } from "@/messages";
 
 type Props = {
-  anime: Pick<Anime, "title" | "year" | "kind" | "cover">;
+  anime: Pick<Anime, "title" | "year" | "kind" | "cover"> & { id?: string };
   /** xs: miniatura em linhas do diário (sem rodapé) */
   size?: "xs" | "md";
   className?: string;
@@ -43,7 +45,15 @@ export function Poster({ anime, size = "md", className = "" }: Props) {
   const [failed, setFailed] = useState(false);
   const { palette, variant, fontSize, longestWord } = posterStyle(anime.title);
   const xs = size === "xs";
-  const cover = !failed && anime.cover && COVER_PATH.test(anime.cover) ? anime.cover : null;
+  // no perfil de um Premium, a capa que ele escolheu (pôster oficial do TMDB) entra no lugar
+  const custom = useContext(CoverOverrides)[anime.id ?? ""];
+  const src = !failed
+    ? custom && TMDB_POSTER_PATH.test(custom)
+      ? `${TMDB_POSTER_BASE}${custom}`
+      : anime.cover && COVER_PATH.test(anime.cover)
+        ? `${COVER_BASE}${anime.cover}`
+        : null
+    : null;
 
   return (
     <div
@@ -60,9 +70,9 @@ export function Poster({ anime, size = "md", className = "" }: Props) {
         <span>{anime.year ?? ""}</span>
         <span>{t.kind[anime.kind]}</span>
       </div>
-      {cover && (
+      {src && (
         <Image
-          src={`${COVER_BASE}${cover}`}
+          src={src}
           alt=""
           fill
           sizes={xs ? "64px" : "(min-width: 768px) 180px, 33vw"}

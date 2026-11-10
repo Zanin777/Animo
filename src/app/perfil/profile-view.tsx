@@ -13,7 +13,8 @@ import type { Anime } from "@/lib/catalog/provider";
 import { useCatalog } from "@/lib/catalog/local";
 import { computeStats } from "@/lib/diary/stats";
 import { diary, useDiary } from "@/lib/diary/store";
-import { MAX_FAVORITES, type DiaryState, type Entry, type WatchStatus } from "@/lib/diary/types";
+import { MAX_FAVORITES, isPremium, type DiaryState, type Entry, type WatchStatus } from "@/lib/diary/types";
+import { CoverOverrides, useCoverChoices } from "@/lib/covers/choices";
 import { accentStyle } from "@/lib/profile/accents";
 import { formatRating } from "@/lib/rating";
 import { useAuth } from "@/lib/auth";
@@ -51,6 +52,8 @@ export function ProfileBody({ state, userId = null, readOnly = false }: { state:
   const [tab, setTab] = useState<WatchStatus>("watched");
   const [section, setSection] = useState<Section>("overview");
   const follows = useFollows(userId);
+  // capas que o dono trocou (só valem enquanto ele for Premium)
+  const { covers } = useCoverChoices(userId && isPremium(state.profile.role) ? userId : null);
 
   const favorites = state.favorites.map((id) => catalog.get(id)).filter((a): a is Anime => a !== null);
   const entries = [...state.entries].sort(byNewest);
@@ -102,6 +105,7 @@ export function ProfileBody({ state, userId = null, readOnly = false }: { state:
   const backdrop = favorites.length ? favorites : recent.map((e) => catalog.get(e.animeId)).filter((a): a is Anime => a !== null);
 
   return (
+    <CoverOverrides.Provider value={covers}>
     <div style={accentStyle(state.profile.accent)}>
       <ProfileHeader
         readOnly={readOnly}
@@ -115,8 +119,16 @@ export function ProfileBody({ state, userId = null, readOnly = false }: { state:
           // com conta: seguidores e seguindo; perfil só do navegador: episódios e listas
           ...(follows.followers !== null && follows.following !== null
             ? [
-                { value: follows.followers, label: t.profile.statFollowers },
-                { value: follows.following, label: t.profile.statFollowing },
+                {
+                  value: follows.followers,
+                  label: t.profile.statFollowers,
+                  href: state.profile.handle ? `/u/${state.profile.handle}/seguidores` : undefined,
+                },
+                {
+                  value: follows.following,
+                  label: t.profile.statFollowing,
+                  href: state.profile.handle ? `/u/${state.profile.handle}/seguindo` : undefined,
+                },
               ]
             : [
                 { value: episodeCount, label: t.profile.statEpisodes },
@@ -374,5 +386,6 @@ export function ProfileBody({ state, userId = null, readOnly = false }: { state:
 
       {!readOnly && <Muted className="mt-10 text-xs">{t.profile.localNotice}</Muted>}
     </div>
+    </CoverOverrides.Provider>
   );
 }
