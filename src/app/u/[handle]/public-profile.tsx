@@ -9,7 +9,7 @@ import { getSupabase } from "@/lib/supabase/client";
 import { t } from "@/messages";
 import { ProfileBody } from "../../perfil/profile-view";
 
-type Load = { status: "loading" } | { status: "ok"; state: DiaryState } | { status: "missing" } | { status: "error" } | { status: "off" };
+type Load = { status: "loading" } | { status: "ok"; state: DiaryState; userId: string } | { status: "missing" } | { status: "error" } | { status: "off" };
 
 const HANDLE = /^[a-z0-9_]{3,20}$/;
 
@@ -31,14 +31,14 @@ export function PublicProfile() {
       if (error) return setLoad({ status: "error" });
       if (!data) return setLoad({ status: "missing" });
       const state = await pullState(sb, data.id as string);
-      if (alive) setLoad(state ? { status: "ok", state } : { status: "error" });
+      if (alive) setLoad(state ? { status: "ok", state, userId: data.id as string } : { status: "error" });
     })();
     return () => {
       alive = false;
     };
   }, [handle]);
 
-  if (load.status === "ok") return <ProfileBody state={load.state} readOnly />;
+  if (load.status === "ok") return <ProfileBody key={load.userId} state={load.state} userId={load.userId} readOnly />;
   return (
     <Muted className="mt-10 text-center">
       {load.status === "loading"

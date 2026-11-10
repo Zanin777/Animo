@@ -5,7 +5,7 @@ import type { Anime, AnimeKind, TmdbRef } from "./provider";
 // Capas: caminhos de pôster do TMDB (tools/fetch-covers.mjs).
 // Não editar o JSON à mão: ajuste tools/catalog-curated.json e rode os scripts.
 //
-// O JSON (~600 KB) NÃO é importado de forma estática: carrega sob demanda
+// O JSON (~2,5 MB; ~600 KB com gzip) NÃO é importado de forma estática: carrega sob demanda
 // (import dinâmico), para não pesar no código de todas as páginas.
 
 export type CatalogRow = {

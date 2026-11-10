@@ -7,6 +7,7 @@ import { authErrorMessage, useAuth } from "@/lib/auth";
 import { HANDLE_RE } from "@/lib/diary/types";
 import { getSupabase } from "@/lib/supabase/client";
 import { t } from "@/messages";
+import { PosterWall } from "./PosterWall";
 import { Muted, PageTitle, btnPrimary, card, input } from "./ui";
 
 export function AuthForm({ mode }: { mode: "signin" | "signup" }) {
@@ -82,9 +83,13 @@ export function AuthForm({ mode }: { mode: "signin" | "signup" }) {
   }
 
   return (
-    <>
+    // celular: faixa de capas em cima · md+: formulário à esquerda, parede de capas em 3D à direita
+    <div className="grid items-start gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] md:gap-10">
+      <PosterWall cols={5} className="-mx-4 h-40 md:order-2 md:mx-0 md:h-[560px] md:rounded-2xl" />
+      <div className="min-w-0">
       <PageTitle>{signup ? t.auth.signupTitle : t.auth.signinTitle}</PageTitle>
-      <form onSubmit={submit} className={`${card} grid max-w-md gap-3 p-5`}>
+      <p className="-mt-3 mb-6 max-w-sm text-muted">{t.auth.guestCta}</p>
+      <form onSubmit={submit} className={`${card} grid max-w-md gap-3 p-5 shadow-[0_24px_48px_-28px_rgb(0_0_0/0.6)]`}>
         {signup && (
           <>
             <label className="grid gap-1 text-sm">
@@ -141,6 +146,7 @@ export function AuthForm({ mode }: { mode: "signin" | "signup" }) {
         </p>
       </form>
       {signup && <Muted className="mt-3 max-w-md text-xs">{t.auth.importNotice}</Muted>}
-    </>
+      </div>
+    </div>
   );
 }

@@ -7,6 +7,7 @@
 @theme inline {
   --font-display: var(--font-dela), system-ui, sans-serif; /* títulos, selo, pôsteres */
   --font-sans: var(--font-zen), system-ui, sans-serif;     /* texto corrido */
+  --font-mincho: var(--font-shippori), Georgia, serif;     /* frase do perfil (serifada japonesa) */
 
   /* cores semânticas (seguem o tema claro/escuro) */
   --color-bg: var(--bg);

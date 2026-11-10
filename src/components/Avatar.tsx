@@ -1,17 +1,23 @@
 import Image from "next/image";
 import type { LocalProfile } from "@/lib/diary/types";
-import { DEV_GOLD } from "@/lib/profile/accents";
+import { ACCENT_COLORS, DEV_GOLD } from "@/lib/profile/accents";
 import { storageUrl } from "@/lib/profile/upload";
 
 /**
  * Foto do perfil; sem foto, o selo hanko com a inicial (como antes).
  * Perfil do criador (role dev): anel duplo dourado em volta.
+ * Premium (role plus): um anel na cor do perfil, para quem vê saber que é Premium.
  */
 export function Avatar({ profile, size = 96, className = "" }: { profile: LocalProfile; size?: number; className?: string }) {
   const src = storageUrl(profile.avatarUrl);
   const initial = (profile.displayName || profile.handle || "A").trim().charAt(0).toUpperCase();
   const dev = profile.role === "dev";
-  const ring = dev ? { boxShadow: `0 0 0 3px var(--bg), 0 0 0 5px ${DEV_GOLD}, 0 0 0 7px var(--bg), 0 0 0 8px ${DEV_GOLD}` } : undefined;
+  const plusColor = profile.accent ? ACCENT_COLORS[profile.accent].color : "var(--accent)";
+  const ring = dev
+    ? { boxShadow: `0 0 0 3px var(--bg), 0 0 0 5px ${DEV_GOLD}, 0 0 0 7px var(--bg), 0 0 0 8px ${DEV_GOLD}` }
+    : profile.role === "plus"
+      ? { boxShadow: `0 0 0 3px var(--bg), 0 0 0 6px ${plusColor}` }
+      : undefined;
 
   if (src) {
     return (

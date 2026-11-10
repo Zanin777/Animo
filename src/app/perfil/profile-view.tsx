@@ -16,24 +16,41 @@ import { diary, useDiary } from "@/lib/diary/store";
 import { MAX_FAVORITES, type DiaryState, type Entry, type WatchStatus } from "@/lib/diary/types";
 import { accentStyle } from "@/lib/profile/accents";
 import { formatRating } from "@/lib/rating";
+import { useAuth } from "@/lib/auth";
+import { useFollows } from "@/lib/social/follows";
 import { useCurrentYear } from "@/lib/use-current-year";
 import { t } from "@/messages";
 import { ProfileHeader } from "./profile-header";
 
 const TABS: WatchStatus[] = ["watched", "watching", "want"];
+type Section = "overview" | "diary" | "library" | "lists";
+const SECTIONS: Section[] = ["overview", "diary", "library", "lists"];
+const SECTION_LABEL: Record<Section, string> = {
+  overview: t.profile.tabOverview,
+  diary: t.profile.tabDiary,
+  library: t.profile.tabLibrary,
+  lists: t.profile.tabLists,
+};
 
 const byNewest = (a: Entry, b: Entry) => b.watchedOn.localeCompare(a.watchedOn) || b.createdAt.localeCompare(a.createdAt);
 
 export function ProfileView() {
-  return <ProfileBody state={useDiary()} />;
+  const auth = useAuth();
+  const userId = auth.status === "user" ? auth.userId : null;
+  return <ProfileBody key={userId ?? "local"} state={useDiary()} userId={userId} />;
 }
 
-/** Corpo do perfil. readOnly = perfil público de alguém (sem editar, sem favoritar). */
-export function ProfileBody({ state, readOnly = false }: { state: DiaryState; readOnly?: boolean }) {
+/**
+ * Corpo do perfil. readOnly = perfil público de alguém (sem editar, sem favoritar).
+ * userId = dono do perfil no banco (null = perfil só deste navegador: sem seguidores).
+ */
+export function ProfileBody({ state, userId = null, readOnly = false }: { state: DiaryState; userId?: string | null; readOnly?: boolean }) {
   const catalog = useCatalog();
   const [picking, setPicking] = useState(false);
   const stats = computeStats(state, useCurrentYear());
   const [tab, setTab] = useState<WatchStatus>("watched");
+  const [section, setSection] = useState<Section>("overview");
+  const follows = useFollows(userId);
 
   const favorites = state.favorites.map((id) => catalog.get(id)).filter((a): a is Anime => a !== null);
   const entries = [...state.entries].sort(byNewest);
@@ -49,7 +66,7 @@ export function ProfileBody({ state, readOnly = false }: { state: DiaryState; re
 
   // diário por mês (YYYY-MM)
   const months = new Map<string, Entry[]>();
-  for (const e of entries.slice(0, 60)) {
+  for (const e of entries) {
     const k = e.watchedOn.slice(0, 7);
     if (!months.has(k)) months.set(k, []);
     months.get(k)!.push(e);
@@ -62,6 +79,12 @@ export function ProfileBody({ state, readOnly = false }: { state: DiaryState; re
     .filter((a): a is Anime => a !== null);
 
   const maxBar = Math.max(1, ...stats.distribution);
+  const counts: Record<Section, number | null> = {
+    overview: null,
+    diary: entries.length,
+    library: Object.keys(state.library).length,
+    lists: state.lists.length,
+  };
 
   // coluna ao lado do topo: gêneros mais vistos (vistos + assistindo) e o que está assistindo
   const seen = Object.values(state.library).filter((l) => l.status !== "want");
@@ -85,154 +108,182 @@ export function ProfileBody({ state, readOnly = false }: { state: DiaryState; re
         side={side}
         profile={state.profile}
         backdrop={backdrop}
+        follows={follows}
         stats={[
           { value: animeCount, label: t.profile.statAnimes },
           { value: stats.thisYear, label: t.profile.statThisYear },
-          { value: episodeCount, label: t.profile.statEpisodes },
-          { value: state.lists.length, label: t.profile.statLists },
+          // com conta: seguidores e seguindo; perfil só do navegador: episódios e listas
+          ...(follows.followers !== null && follows.following !== null
+            ? [
+                { value: follows.followers, label: t.profile.statFollowers },
+                { value: follows.following, label: t.profile.statFollowing },
+              ]
+            : [
+                { value: episodeCount, label: t.profile.statEpisodes },
+                { value: state.lists.length, label: t.profile.statLists },
+              ]),
         ]}
       />
 
-      {/* favoritos: 4 grandes, numerados com selo; vazio = "+" para escolher */}
-      <SectionTitle>{t.profile.favorites}</SectionTitle>
-      <div className="grid grid-cols-4 gap-3">
-        {Array.from({ length: MAX_FAVORITES }, (_, i) => {
-          const a = favorites[i];
-          return (
-            <div key={a?.id ?? `vazio-${i}`} className="group relative">
-              <span className="absolute -top-2 -left-2 z-10 grid h-7 w-7 -rotate-6 place-items-center rounded-full border-2 border-accent bg-bg font-display text-xs text-accent">
-                {i + 1}
-              </span>
-              {a ? (
-                <>
-                  <AnimeTile anime={a} />
-                  {!readOnly && (
+      <div className="mt-8">
+        <Tabs label={t.profile.sections} value={section} onChange={setSection} tabs={SECTIONS.map((k) => [
+            k,
+            <>
+              {SECTION_LABEL[k]}
+              {counts[k] !== null && <span className="ml-1.5 text-xs font-normal text-muted tabular-nums">{counts[k]}</span>}
+            </>,
+          ])} />
+      </div>
+
+      {section === "overview" && (
+        <>
+
+          {/* favoritos: 4 grandes, numerados com selo; vazio = "+" para escolher */}
+          <SectionTitle>{t.profile.favorites}</SectionTitle>
+          <div className="grid grid-cols-4 gap-3">
+            {Array.from({ length: MAX_FAVORITES }, (_, i) => {
+              const a = favorites[i];
+              return (
+                <div key={a?.id ?? `vazio-${i}`} className="group relative">
+                  <span className="absolute -top-2 -left-2 z-10 grid h-7 w-7 -rotate-6 place-items-center rounded-full border-2 border-accent bg-bg font-display text-xs text-accent">
+                    {i + 1}
+                  </span>
+                  {a ? (
+                    <>
+                      <AnimeTile anime={a} />
+                      {!readOnly && (
+                        <button
+                          type="button"
+                          onClick={() => diary.toggleFavorite(a.id)}
+                          className="absolute -top-2 -right-2 z-10 grid h-7 w-7 cursor-pointer place-items-center rounded-full border border-line bg-bg text-sm text-muted transition-opacity hover:text-fg sm:opacity-0 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100"
+                          aria-label={`${t.profile.removeFavorite}: ${a.title}`}
+                          title={t.profile.removeFavorite}
+                        >
+                          ×
+                        </button>
+                      )}
+                    </>
+                  ) : readOnly ? (
+                    <div className="aspect-[2/3] rounded-lg border border-dashed border-line" />
+                  ) : (
                     <button
                       type="button"
-                      onClick={() => diary.toggleFavorite(a.id)}
-                      className="absolute -top-2 -right-2 z-10 grid h-7 w-7 cursor-pointer place-items-center rounded-full border border-line bg-bg text-sm text-muted transition-opacity hover:text-fg sm:opacity-0 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100"
-                      aria-label={`${t.profile.removeFavorite}: ${a.title}`}
-                      title={t.profile.removeFavorite}
+                      onClick={() => setPicking(true)}
+                      className="press grid aspect-[2/3] w-full cursor-pointer place-items-center rounded-lg border border-dashed border-line text-muted transition-colors hover:border-accent hover:text-accent"
+                      aria-label={t.profile.addFavorite}
+                      title={t.profile.addFavorite}
                     >
-                      ×
+                      <IconPlus size={28} />
                     </button>
                   )}
-                </>
-              ) : readOnly ? (
-                <div className="aspect-[2/3] rounded-lg border border-dashed border-line" />
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setPicking(true)}
-                  className="press grid aspect-[2/3] w-full cursor-pointer place-items-center rounded-lg border border-dashed border-line text-muted transition-colors hover:border-accent hover:text-accent"
-                  aria-label={t.profile.addFavorite}
-                  title={t.profile.addFavorite}
-                >
-                  <IconPlus size={28} />
-                </button>
-              )}
-            </div>
-          );
-        })}
-      </div>
-      {!readOnly && favorites.length === 0 && <Muted className="mt-2">{t.profile.favoritesEmpty}</Muted>}
-      {!readOnly && (
-        <AnimePicker
-          open={picking}
-          title={t.profile.pickFavorite}
-          exclude={state.favorites}
-          onClose={() => setPicking(false)}
-          onPick={(a) => {
-            diary.toggleFavorite(a.id);
-            setPicking(false);
-          }}
-        />
-      )}
-
-      {/* atividade recente: capa + nota embaixo */}
-      <SectionTitle>{t.profile.recent}</SectionTitle>
-      {recent.length === 0 ? (
-        <Muted>{t.profile.recentEmpty}</Muted>
-      ) : (
-        <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pt-3 pb-2">
-          {recent.map((e) => {
-            const a = catalog.get(e.animeId);
-            if (!a) return null;
-            return (
-              <div key={e.id} className="w-24 flex-none sm:w-28">
-                <Link href={`/anime/${a.id}`} className="poster-link" aria-label={a.title}>
-                  <Poster anime={a} />
-                </Link>
-                <div className="mt-1.5 flex items-center justify-between text-xs text-muted">
-                  <span>{e.ratingHalf !== null ? <span className="text-accent">{"★".repeat(Math.floor(e.ratingHalf / 2))}{e.ratingHalf % 2 ? "½" : ""}</span> : "—"}</span>
-                  {e.isRewatch && <span>{t.profile.rewatch}</span>}
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* melhores episódios */}
-      <SectionTitle>{t.profile.bestEpisodes}</SectionTitle>
-      {bestEpisodes.length === 0 ? (
-        <Muted>{t.profile.bestEpisodesEmpty}</Muted>
-      ) : (
-        <ol className={rows}>
-          {bestEpisodes.map((b, i) => {
-            const a = catalog.get(b.animeId);
-            if (!a) return null;
-            return (
-              <li key={`${b.animeId}#${b.ep}`}>
-                <Link href={`/anime/${a.id}#ep-${b.ep}`} className="grid grid-cols-[24px_36px_1fr_auto] items-center gap-3 py-2.5 transition-colors hover:bg-card">
-                  <span className="text-center font-display text-muted tabular-nums">{i + 1}</span>
-                  <Poster anime={a} size="xs" />
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-bold">{t.community.episodeOf(b.ep, a.title)}</span>
-                  </span>
-                  <Hanko half={b.half} size="sm" />
-                </Link>
-              </li>
-            );
-          })}
-        </ol>
-      )}
-
-      {/* notas */}
-      <SectionTitle>{t.profile.ratingsTitle}</SectionTitle>
-      <div className={`${card} grid gap-4 p-4 sm:grid-cols-[auto_1fr] sm:items-center`}>
-        <div className="flex items-center gap-3">
-          {stats.avgHalf !== null ? (
-            <span className="hanko hanko-lg">
-              <SlidingNumber value={stats.avgHalf / 2} decimals={1} />
-            </span>
-          ) : (
-            <span className="hanko hanko-lg opacity-40">–</span>
+              );
+            })}
+          </div>
+          {!readOnly && favorites.length === 0 && <Muted className="mt-2">{t.profile.favoritesEmpty}</Muted>}
+          {!readOnly && (
+            <AnimePicker
+              open={picking}
+              title={t.profile.pickFavorite}
+              exclude={state.favorites}
+              onClose={() => setPicking(false)}
+              onPick={(a) => {
+                diary.toggleFavorite(a.id);
+                setPicking(false);
+              }}
+            />
           )}
-          <div className="text-sm text-muted">
-            <div>{t.profile.statAvg}</div>
-            <div>{t.community.ratings(stats.distribution.reduce((s, n) => s + n, 0))}</div>
-          </div>
-        </div>
-        <div>
-          <div className="flex h-20 items-end gap-1" aria-label={t.profile.distribution}>
-            {stats.distribution.map((n, i) => (
-              <div key={i} className="flex flex-1 flex-col justify-end" title={`${formatRating(i + 1)}: ${n}`}>
-                <div className="w-full rounded-sm bg-accent" style={{ height: `${(n / maxBar) * 100}%`, minHeight: n ? 3 : 1, opacity: n ? 1 : 0.15 }} />
+
+          {/* atividade recente: capa + nota embaixo */}
+          <SectionTitle>{t.profile.recent}</SectionTitle>
+          {recent.length === 0 ? (
+            <Muted>{t.profile.recentEmpty}</Muted>
+          ) : (
+            <div className="-mx-4 -mt-1 flex gap-3 overflow-x-auto px-4 pt-4 pb-2">
+              {recent.map((e) => {
+                const a = catalog.get(e.animeId);
+                if (!a) return null;
+                return (
+                  <div key={e.id} className="w-24 flex-none sm:w-28">
+                    <Link href={`/anime/${a.id}`} className="poster-link" aria-label={a.title}>
+                      <Poster anime={a} />
+                    </Link>
+                    <div className="mt-1.5 flex items-center justify-between text-xs text-muted">
+                      <span>{e.ratingHalf !== null ? <span className="text-accent">{"★".repeat(Math.floor(e.ratingHalf / 2))}{e.ratingHalf % 2 ? "½" : ""}</span> : "—"}</span>
+                      {e.isRewatch && <span>{t.profile.rewatch}</span>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* melhores episódios */}
+          {(!readOnly || bestEpisodes.length > 0) && <SectionTitle>{readOnly ? t.profile.bestEpisodesOther : t.profile.bestEpisodes}</SectionTitle>}
+          {bestEpisodes.length === 0 ? (
+            readOnly ? null : (
+              <Muted>{t.profile.bestEpisodesEmpty}</Muted>
+            )
+          ) : (
+            <ol className={rows}>
+              {bestEpisodes.map((b, i) => {
+                const a = catalog.get(b.animeId);
+                if (!a) return null;
+                return (
+                  <li key={`${b.animeId}#${b.ep}`}>
+                    <Link href={`/anime/${a.id}#ep-${b.ep}`} className="grid grid-cols-[24px_36px_1fr_auto] items-center gap-3 py-2.5 transition-colors hover:bg-card">
+                      <span className="text-center font-display text-muted tabular-nums">{i + 1}</span>
+                      <Poster anime={a} size="xs" />
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-bold">{t.community.episodeOf(b.ep, a.title)}</span>
+                      </span>
+                      <Hanko half={b.half} size="sm" />
+                    </Link>
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+
+          {/* notas */}
+          <SectionTitle>{readOnly ? t.profile.ratingsOther : t.profile.ratingsTitle}</SectionTitle>
+          <div className={`${card} grid gap-4 p-4 sm:grid-cols-[auto_1fr] sm:items-center`}>
+            <div className="flex items-center gap-3">
+              {stats.avgHalf !== null ? (
+                <span className="hanko hanko-lg">
+                  <SlidingNumber value={stats.avgHalf / 2} decimals={1} />
+                </span>
+              ) : (
+                <span className="hanko hanko-lg opacity-40">–</span>
+              )}
+              <div className="text-sm text-muted">
+                <div>{t.profile.statAvg}</div>
+                <div>{t.community.ratings(stats.distribution.reduce((s, n) => s + n, 0))}</div>
               </div>
-            ))}
+            </div>
+            <div>
+              <div className="flex h-20 items-end gap-1" aria-label={t.profile.distribution}>
+                {stats.distribution.map((n, i) => (
+                  <div key={i} className="flex flex-1 flex-col justify-end" title={`${formatRating(i + 1)}: ${n}`}>
+                    <div className="w-full rounded-sm bg-accent" style={{ height: `${(n / maxBar) * 100}%`, minHeight: n ? 3 : 1, opacity: n ? 1 : 0.15 }} />
+                  </div>
+                ))}
+              </div>
+              <div className="mt-1 flex justify-between text-xs text-muted">
+                <span>½</span>
+                <span>★★★★★</span>
+              </div>
+            </div>
           </div>
-          <div className="mt-1 flex justify-between text-xs text-muted">
-            <span>½</span>
-            <span>★★★★★</span>
-          </div>
-        </div>
-      </div>
+
+        </>
+      )}
 
       {/* diário por mês */}
-      {months.size > 0 && (
-        <>
-          <SectionTitle>{t.profile.diaryByMonth}</SectionTitle>
+      {section === "diary" &&
+        (months.size === 0 ? (
+          <Muted>{t.profile.diaryEmpty}</Muted>
+        ) : (
           <div className="grid gap-5">
             {[...months].map(([ym, list]) => {
               const [y, m] = ym.split("-").map(Number);
@@ -264,33 +315,47 @@ export function ProfileBody({ state, readOnly = false }: { state: DiaryState; re
               );
             })}
           </div>
+        ))}
+
+      {/* biblioteca */}
+      {section === "library" && (
+        <>
+          <div className="flex flex-wrap gap-2" role="group" aria-label={t.profile.library}>
+            {TABS.map((s) => (
+              <button
+                key={s}
+                type="button"
+                aria-pressed={tab === s}
+                onClick={() => setTab(s)}
+                className={`press cursor-pointer rounded-full border px-3 py-1 text-sm transition-colors ${
+                  tab === s ? "border-active font-bold text-fg" : "border-line text-muted hover:text-fg"
+                }`}
+              >
+                {t.status[s]}
+              </button>
+            ))}
+          </div>
+          <div className="mt-4">
+            {shelf.length === 0 ? (
+              <Muted>—</Muted>
+            ) : (
+              <PosterGrid>
+                {shelf.map((a) => (
+                  <AnimeTile key={a.id} anime={a} />
+                ))}
+              </PosterGrid>
+            )}
+          </div>
         </>
       )}
 
-      {/* biblioteca */}
-      <SectionTitle>{t.profile.library}</SectionTitle>
-      <Tabs
-        label={t.profile.library}
-        value={tab}
-        onChange={setTab}
-        tabs={TABS.map((s) => [s, t.status[s]] as [WatchStatus, string])}
-      />
-      {shelf.length === 0 ? (
-        <Muted>—</Muted>
-      ) : (
-        <PosterGrid>
-          {shelf.map((a) => (
-            <AnimeTile key={a.id} anime={a} />
-          ))}
-        </PosterGrid>
-      )}
-
       {/* listas */}
-      {state.lists.length > 0 && (
-        <>
-          <SectionTitle>{t.profile.myLists}</SectionTitle>
+      {section === "lists" &&
+        (state.lists.length === 0 ? (
+          <Muted>{t.profile.listsEmpty}</Muted>
+        ) : (
           <div className="grid gap-2 sm:grid-cols-2">
-            {state.lists.slice(0, 4).map((l) => (
+            {state.lists.map((l) => (
               <Link key={l.id} href={`/listas/${l.id}`} className="flex items-center gap-3 rounded-md py-1 transition-colors hover:bg-card">
                 <div className="flex w-20 flex-none -space-x-6">
                   {l.items.slice(0, 3).map((i) => {
@@ -305,13 +370,7 @@ export function ProfileBody({ state, readOnly = false }: { state: DiaryState; re
               </Link>
             ))}
           </div>
-          {state.lists.length > 4 && (
-            <Link href="/listas" className="mt-2 inline-block text-sm text-accent">
-              {t.profile.seeAll} →
-            </Link>
-          )}
-        </>
-      )}
+        ))}
 
       {!readOnly && <Muted className="mt-10 text-xs">{t.profile.localNotice}</Muted>}
     </div>

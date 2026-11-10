@@ -26,7 +26,7 @@ export function Tabs<K extends string>({
   onChange,
   label,
 }: {
-  tabs: [K, string][];
+  tabs: [K, ReactNode][];
   value: K;
   onChange: (k: K) => void;
   label: string;

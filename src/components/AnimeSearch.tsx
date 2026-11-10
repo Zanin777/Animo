@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { Anime, AnimeKind } from "@/lib/catalog/provider";
 import { useCatalog } from "@/lib/catalog/local";
 import { t } from "@/messages";
+import { IconSearch } from "./Icons";
 import { btnGhost, btnPrimary, card, input } from "./ui";
 
 type Props = {
@@ -11,10 +12,20 @@ type Props = {
   autoFocus?: boolean;
   /** como mostrar os resultados */
   render: (results: Anime[]) => React.ReactNode;
+  /** avisa quais animes estão nos resultados (vazio quando não há busca) */
+  onResults?: (results: Anime[]) => void;
+  /** campo grande com ícone (página Buscar) */
+  large?: boolean;
+  /** o que a pessoa digitou (ex.: para buscar pessoas junto) */
+  onQuery?: (q: string) => void;
+  /** aparece logo abaixo do campo, antes dos animes (ex.: pessoas encontradas) */
+  before?: React.ReactNode;
+  /** texto de ajuda dentro do campo */
+  placeholder?: string;
 };
 
 /** Campo de busca + "Adicionar ao catálogo" quando falta o título. */
-export function AnimeSearch({ onPick, autoFocus, render }: Props) {
+export function AnimeSearch({ onPick, autoFocus, render, onResults, large = false, onQuery, before, placeholder = t.search.placeholder }: Props) {
   const catalog = useCatalog();
   const [q, setQ] = useState("");
   const [results, setResults] = useState<Anime[]>([]);
@@ -22,25 +33,36 @@ export function AnimeSearch({ onPick, autoFocus, render }: Props) {
 
   useEffect(() => {
     let alive = true;
-    catalog.search(q, { limit: 24 }).then((r) => alive && setResults(r));
+    catalog.search(q, { limit: 24 }).then((r) => {
+      if (!alive) return;
+      setResults(r);
+      onResults?.(r);
+    });
     return () => {
       alive = false;
     };
-  }, [q, catalog]);
+  }, [q, catalog, onResults]);
 
   return (
     <div>
-      <input
-        type="search"
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        placeholder={t.search.placeholder}
-        autoFocus={autoFocus}
-        className={input}
-        aria-label={t.search.placeholder}
-      />
+      <div className="relative">
+        {large && <IconSearch size={20} className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-muted" aria-hidden="true" />}
+        <input
+          type="search"
+          value={q}
+          onChange={(e) => {
+            setQ(e.target.value);
+            onQuery?.(e.target.value);
+          }}
+          placeholder={placeholder}
+          autoFocus={autoFocus}
+          className={large ? `${input} h-14 rounded-xl pl-12 text-lg shadow-[0_12px_32px_-18px_rgb(0_0_0/0.6)]` : input}
+          aria-label={placeholder}
+        />
+      </div>
+      {before}
 
-      {q.trim() && (
+      {q.trim() && !(before && q.trim().startsWith("@")) && (
         <div className="mt-4">
           {results.length > 0 ? render(results) : <p className="text-sm text-muted">{t.search.noResults(q.trim())}</p>}
           {!creating && (

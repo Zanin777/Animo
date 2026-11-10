@@ -3,11 +3,14 @@
 import { useParams } from "next/navigation";
 import { CommunityReviews } from "@/components/CommunityReviews";
 import { SeasonsSection } from "@/components/SeasonsSection";
+import { Synopsis } from "@/components/Synopsis";
 import { IconHeart } from "@/components/Icons";
 import { openLog } from "@/components/LogDrawer";
 import { useState } from "react";
 import { EntryRow } from "@/components/EntryRow";
-import { Poster } from "@/components/Poster";
+import Image from "next/image";
+import { SharedPoster, coverUrl } from "@/components/Poster";
+import { Tilt } from "@/components/Tilt";
 import { Muted, SectionTitle, btnGhost, btnPrimary, input, rows } from "@/components/ui";
 import { useCatalog } from "@/lib/catalog/local";
 import { diary, useDiary } from "@/lib/diary/store";
@@ -36,14 +39,39 @@ export function AnimeView() {
     .filter(Boolean)
     .join(" · ");
 
+  const backdrop = coverUrl(anime);
+
   return (
     <>
-      <div className="grid grid-cols-[120px_1fr] gap-5 sm:grid-cols-[180px_1fr]">
-        <Poster anime={anime} />
-        <div className="min-w-0">
-          <h1 className="font-display text-2xl leading-tight break-words sm:text-3xl">{anime.title}</h1>
+      {/* topo: a própria capa, desfocada, vira o fundo · celular: sinopse embaixo, na largura toda;
+          sm+: ao lado do pôster, sob os botões */}
+      <header className="relative isolate -mx-4 -mt-6 px-4 pt-8 pb-2 sm:pt-10">
+        {backdrop && (
+          <div
+            className="pointer-events-none absolute inset-0 -z-10 overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_18%,#000_82%,transparent)]"
+            aria-hidden="true"
+          >
+            <Image src={backdrop} alt="" fill sizes="480px" className="scale-125 object-cover opacity-45 blur-3xl saturate-150" priority />
+            <div className="absolute inset-0 bg-gradient-to-b from-bg/30 via-bg/75 to-bg" />
+          </div>
+        )}
+      <div className="grid grid-cols-[120px_1fr] gap-x-5 gap-y-4 sm:grid-cols-[200px_1fr] sm:gap-x-8 sm:grid-rows-[auto_1fr]">
+        <Tilt className="self-start shadow-[0_24px_48px_-16px_rgb(0_0_0/0.55)] sm:row-span-2">
+          <SharedPoster anime={anime} />
+        </Tilt>
+        <div className="min-w-0 sm:pt-2">
+          <h1 className="font-display text-2xl leading-tight text-balance break-words sm:text-4xl">{anime.title}</h1>
           {anime.titleOriginal && <p className="mt-1 text-muted">{anime.titleOriginal}</p>}
           <p className="mt-2 text-sm text-muted">{meta}</p>
+          {anime.genres.length > 0 && (
+            <ul className="mt-3 flex flex-wrap gap-1.5" aria-label={t.anime.genres}>
+              {anime.genres.map((g) => (
+                <li key={g} className="rounded-full border border-line bg-bg/40 px-2.5 py-0.5 text-xs">
+                  {t.genre[g] ?? g}
+                </li>
+              ))}
+            </ul>
+          )}
           {!anime.isVerified && <p className="mt-1 text-xs text-muted">{t.search.userCreated}</p>}
 
           <div className="mt-5 flex flex-wrap gap-2">
@@ -64,7 +92,9 @@ export function AnimeView() {
             </button>
           </div>
         </div>
+        <Synopsis key={`s-${anime.id}`} anime={anime} className="col-span-2 min-w-0 sm:col-span-1 sm:col-start-2" />
       </div>
+      </header>
 
       {notice && <p className="mt-3 text-sm text-accent">{notice}</p>}
 

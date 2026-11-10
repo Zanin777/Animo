@@ -1,4 +1,9 @@
-import type { Accent } from "@/lib/diary/types";
+import { isPremium, type Accent, type LocalProfile } from "@/lib/diary/types";
+
+/** Cor do nome (só vale para Premium). */
+export function nameColorOf(p: LocalProfile): string | undefined {
+  return isPremium(p.role) && p.nameColor ? ACCENT_COLORS[p.nameColor].color : undefined;
+}
 
 // Cores de destaque do perfil. Funcionam nos dois temas (contraste ≥ 3:1 em
 // fundo escuro e claro para elementos grandes: selo, borda, botões).

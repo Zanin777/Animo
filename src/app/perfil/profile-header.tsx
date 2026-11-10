@@ -19,6 +19,7 @@ import {
 } from "@/components/Icons";
 import { Poster } from "@/components/Poster";
 import { SlidingNumber } from "@/components/SlidingNumber";
+import { SynopsisSnippet } from "@/components/Synopsis";
 import { btnGhost, btnPrimary, input } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
 import type { Anime } from "@/lib/catalog/provider";
@@ -26,10 +27,11 @@ import { useCatalog } from "@/lib/catalog/local";
 import type { ProfileError } from "@/lib/diary/ops";
 import { currentUserId, diary, useSyncStatus } from "@/lib/diary/store";
 import { ACCENTS, FEATURED_NOTE_MAX, isPremium, type Accent, type LocalProfile } from "@/lib/diary/types";
-import { ACCENT_COLORS, DEV_GOLD, accentStyle } from "@/lib/profile/accents";
+import { ACCENT_COLORS, DEV_GOLD, accentStyle, nameColorOf } from "@/lib/profile/accents";
 import type { Crop } from "@/lib/profile/crop";
 import { ASPECT, removeProfileImage, storageUrl, uploadProfileImage, type UploadError, type UploadKind } from "@/lib/profile/upload";
 import { ImageCropper } from "@/components/ImageCropper";
+import type { FollowInfo } from "@/lib/social/follows";
 import { SUPABASE_ENABLED } from "@/lib/supabase/env";
 import { t } from "@/messages";
 
@@ -39,10 +41,7 @@ const NAME_MAX = 50;
 const BIO_MAX = 300;
 const btnOutline = `${btnGhost} border border-line`;
 
-/** Cor do nome (só vale para Premium). */
-export function nameColorOf(p: LocalProfile): string | undefined {
-  return isPremium(p.role) && p.nameColor ? ACCENT_COLORS[p.nameColor].color : undefined;
-}
+export { nameColorOf };
 
 export type ProfileSide = { genres: string[]; watching: Anime[] };
 
@@ -59,12 +58,14 @@ export function ProfileHeader({
   backdrop,
   stats,
   side,
+  follows,
   readOnly = false,
 }: {
   profile: LocalProfile;
   backdrop: Anime[];
   stats: Stat[];
   side: ProfileSide;
+  follows: FollowInfo;
   readOnly?: boolean;
 }) {
   const [draft, setDraft] = useState<LocalProfile | null>(null);
@@ -73,11 +74,16 @@ export function ProfileHeader({
 
   return (
     <header className="relative isolate -mx-4 mb-2 px-4 pt-6 pb-5 sm:rounded-2xl" style={draft ? accentStyle(draft.accent) : undefined}>
-      {banner ? <Banner src={banner} dev={shown.role === "dev"} /> : <BlurBackdrop backdrop={backdrop} />}
+      {banner ? <Banner src={banner} /> : <BlurBackdrop backdrop={backdrop} />}
 
       <div className="md:grid md:grid-cols-[minmax(0,1fr)_15rem] md:gap-10">
         <div className="min-w-0">
-          <Identity profile={shown} readOnly={readOnly} overBanner={banner !== null} />
+          <Identity
+            profile={shown}
+            readOnly={readOnly}
+            overBanner={banner !== null}
+            action={readOnly ? <FollowButton follows={follows} /> : null}
+          />
 
           {!readOnly && !draft && (
             <div className="mt-5 flex flex-wrap items-center gap-2">
@@ -97,7 +103,7 @@ export function ProfileHeader({
       <dl className="mt-6 grid grid-cols-4 divide-x divide-line border-y border-line py-3 text-center md:hidden">
         {stats.map((s) => (
           <div key={s.label} className="px-1">
-            <dd className="flex justify-center font-display text-2xl leading-none">
+            <dd className="flex justify-center font-display text-2xl leading-none text-accent">
               <SlidingNumber value={s.value} />
             </dd>
             <dt className="mt-1 text-[11px] leading-tight text-muted">{s.label}</dt>
@@ -108,16 +114,42 @@ export function ProfileHeader({
   );
 }
 
-/** Capa enviada: inteira, sem véu por cima. A faixa do criador fica no canto da imagem. */
-function Banner({ src, dev }: { src: string; dev: boolean }) {
+/** Seguir / Seguindo no perfil de outra pessoa. Sem conta: leva para entrar. */
+function FollowButton({ follows }: { follows: FollowInfo }) {
+  if (follows.followers === null || follows.viewer === "self" || follows.viewer === "loading") return null;
+  return (
+    <div className="mt-4">
+      {follows.viewer === "guest" ? (
+        <Link href="/entrar" className={btnPrimary}>
+          {t.profile.follow}
+        </Link>
+      ) : (
+        <button
+          type="button"
+          aria-pressed={follows.isFollowing}
+          disabled={follows.busy}
+          onClick={follows.toggle}
+          className={`${follows.isFollowing ? btnOutline : btnPrimary} group min-w-28`}
+        >
+          {follows.isFollowing ? (
+            <>
+              <span className="group-hover:hidden">{t.profile.following}</span>
+              <span className="hidden group-hover:inline">{t.profile.unfollow}</span>
+            </>
+          ) : (
+            t.profile.follow
+          )}
+        </button>
+      )}
+    </div>
+  );
+}
+
+/** Capa enviada: inteira, sem véu por cima. */
+function Banner({ src }: { src: string }) {
   return (
     <div className="relative -mx-4 -mt-6 aspect-[16/5] overflow-hidden bg-card sm:mx-0 sm:mt-0 sm:rounded-xl">
       <Image src={src} alt="" fill sizes="(min-width: 768px) 736px, 100vw" className="object-cover" priority />
-      {dev && (
-        <div className="absolute top-3 left-3">
-          <DevBand />
-        </div>
-      )}
     </div>
   );
 }
@@ -138,19 +170,18 @@ function BlurBackdrop({ backdrop }: { backdrop: Anime[] }) {
   );
 }
 
-function DevBand() {
-  return (
-    <p
-      className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold"
-      style={{ borderColor: DEV_GOLD, color: DEV_GOLD, background: "color-mix(in srgb, var(--bg) 82%, transparent)" }}
-    >
-      <IconSpark size={13} strokeWidth={2} />
-      {t.profile.devBand}
-    </p>
-  );
-}
-
-function Identity({ profile, readOnly, overBanner }: { profile: LocalProfile; readOnly: boolean; overBanner: boolean }) {
+function Identity({
+  profile,
+  readOnly,
+  overBanner,
+  action,
+}: {
+  profile: LocalProfile;
+  readOnly: boolean;
+  overBanner: boolean;
+  /** botão logo abaixo da bio (Seguir, no perfil de outra pessoa) */
+  action?: ReactNode;
+}) {
   const catalog = useCatalog();
   const name = profile.displayName || (readOnly ? `@${profile.handle}` : t.profile.defaultName);
   const dev = profile.role === "dev";
@@ -158,38 +189,59 @@ function Identity({ profile, readOnly, overBanner }: { profile: LocalProfile; re
 
   return (
     <>
-      {dev && !overBanner && (
-        <div className="mb-4">
-          <DevBand />
-        </div>
-      )}
-
       <div className="flex items-start gap-4">
         {/* com capa, a foto sobe e encosta na borda de baixo da imagem */}
         <span className={`relative flex-none rounded-full ${overBanner ? "-mt-12 ring-4 ring-bg sm:-mt-14" : ""}`}>
           <Avatar profile={profile} size={92} />
         </span>
         <div className={`min-w-0 flex-1 ${overBanner ? "pt-3" : "pt-1"}`}>
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <h1 className="font-display text-3xl leading-tight break-words sm:text-4xl" style={{ color: nameColorOf(profile) }}>
-              {name}
-            </h1>
-            {dev && <DevSeal />}
-          </div>
+          <h1 className="font-display text-3xl leading-tight break-words sm:text-4xl" style={{ color: nameColorOf(profile) }}>
+            {name}
+          </h1>
+          {dev && (
+            <p className="mt-0.5 font-mincho text-base tracking-wide" style={{ color: DEV_GOLD }}>
+              {t.profile.devTagline}
+            </p>
+          )}
+          {profile.role === "plus" && (
+            <p className="mt-1.5 mb-0.5 inline-flex items-center gap-1.5 rounded-full border border-accent px-2.5 py-0.5 text-xs font-bold text-accent">
+              <IconSpark size={12} strokeWidth={2} />
+              {t.profile.premium}
+            </p>
+          )}
           {profile.handle && <p className="text-sm text-muted">@{profile.handle}</p>}
           {(profile.bio || !readOnly) && (
             <p className={`mt-2 max-w-prose text-sm ${profile.bio ? "" : "text-muted italic"}`}>{profile.bio || t.profile.noBio}</p>
           )}
+          {action}
         </div>
       </div>
 
       {featured && (
-        <Link href={`/anime/${featured.id}`} className="mt-5 flex max-w-md items-center gap-3 rounded-lg bg-card/80 p-2 pr-4 transition-colors hover:bg-card">
-          <Poster anime={featured} size="xs" className="w-11 flex-none" />
-          <span className="min-w-0">
+        <Link
+          href={`/anime/${featured.id}`}
+          className="mt-6 flex max-w-xl items-start gap-4 rounded-xl bg-card/80 p-3 pr-5 transition-colors hover:bg-card sm:gap-5"
+        >
+          <Poster anime={featured} className="w-20 flex-none sm:w-24" />
+          <span className="min-w-0 flex-1 py-0.5">
             <span className="block text-xs font-bold text-accent">{t.profile.featured}</span>
-            <span className="block truncate font-bold">{featured.title}</span>
-            {profile.featuredNote && <span className="block text-sm text-muted">“{profile.featuredNote}”</span>}
+            <span className="mt-1 block font-display text-lg leading-tight break-words sm:text-xl">{featured.title}</span>
+            <span className="mt-1 block text-xs text-muted">
+              {[featured.year, t.kind[featured.kind], featured.episodes && featured.kind !== "movie" ? t.anime.episodes(featured.episodes) : null]
+                .filter(Boolean)
+                .join(" · ")}
+            </span>
+            {featured.genres.length > 0 && (
+              <span className="mt-2 flex flex-wrap gap-1.5">
+                {featured.genres.slice(0, 3).map((g) => (
+                  <span key={g} className="rounded-full border border-line px-2 py-px text-xs">
+                    {t.genre[g] ?? g}
+                  </span>
+                ))}
+              </span>
+            )}
+            {profile.featuredNote && <span className="mt-2.5 block text-sm">“{profile.featuredNote}”</span>}
+            <SynopsisSnippet key={featured.id} anime={featured} className="mt-2.5 text-sm text-muted" />
           </span>
         </Link>
       )}
@@ -204,7 +256,7 @@ function SidePanel({ stats, side, withBanner }: { stats: Stat[]; side: ProfileSi
       <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-line bg-line">
         {stats.map((s) => (
           <div key={s.label} className="bg-bg px-3 py-3">
-            <dd className="font-display text-2xl leading-none">
+            <dd className="font-display text-2xl leading-none text-accent">
               <SlidingNumber value={s.value} />
             </dd>
             <dt className="mt-1 text-xs leading-tight text-muted">{s.label}</dt>
@@ -241,20 +293,6 @@ function SidePanel({ stats, side, withBanner }: { stats: Stat[]; side: ProfileSi
         </div>
       )}
     </aside>
-  );
-}
-
-/** Selo hanko "dev" em dourado, só no perfil do criador. */
-function DevSeal() {
-  return (
-    <span
-      className="grid h-9 w-9 flex-none -rotate-12 place-items-center rounded-full border-2 font-display text-[11px] leading-none"
-      style={{ borderColor: DEV_GOLD, color: DEV_GOLD, boxShadow: `inset 0 0 0 2px color-mix(in srgb, ${DEV_GOLD} 22%, transparent)` }}
-      title={t.profile.devBand}
-      aria-label={t.profile.devBand}
-    >
-      {t.profile.devSeal}
-    </span>
   );
 }
 

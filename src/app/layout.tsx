@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Dela_Gothic_One, Zen_Kaku_Gothic_New } from "next/font/google";
-import { Suspense } from "react";
+import { Dela_Gothic_One, Shippori_Mincho, Zen_Kaku_Gothic_New } from "next/font/google";
+import { Suspense, ViewTransition } from "react";
 import { AppNav, NavShell } from "@/components/AppNav";
 import { InlineScript } from "@/components/InlineScript";
 import { LogDrawer } from "@/components/LogDrawer";
@@ -20,6 +20,14 @@ const zen = Zen_Kaku_Gothic_New({
   subsets: ["latin", "latin-ext"],
 });
 
+// só a frase curta embaixo do nome no perfil: um peso, sem pré-carregar
+const shippori = Shippori_Mincho({
+  variable: "--font-shippori",
+  weight: "600",
+  subsets: ["latin", "latin-ext"],
+  preload: false,
+});
+
 export const metadata: Metadata = {
   title: { default: "Aniora", template: "%s · Aniora" },
   description: t.app.tagline,
@@ -34,7 +42,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="pt-BR" className={`${dela.variable} ${zen.variable} antialiased`} suppressHydrationWarning>
+    <html lang="pt-BR" className={`${dela.variable} ${zen.variable} ${shippori.variable} antialiased`} suppressHydrationWarning>
       <head>
         <InlineScript html={themeBootScript} />
       </head>
@@ -42,7 +50,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Suspense fallback={<NavShell path={null} />}>
           <AppNav />
         </Suspense>
-        <main className="mx-auto w-full max-w-3xl px-4 pt-6 pb-28 md:pb-12">{children}</main>
+        {/* troca de página com transição (.page em globals.css); sem suporte no navegador, troca direto */}
+        <ViewTransition default="page">
+          <main className="mx-auto w-full max-w-3xl px-4 pt-6 pb-28 md:pb-12">{children}</main>
+        </ViewTransition>
         <LogDrawer />
       </body>
     </html>

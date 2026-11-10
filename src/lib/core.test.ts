@@ -59,6 +59,11 @@ describe("busca", () => {
     const list = [mk("c", "Princesa Mononoke"), mk("b", "Mononoke Hime"), mk("a", "Mononoke")];
     expect(rankMatches(list, "mononoke").map((a) => a.id)).toEqual(["a", "b", "c"]);
   });
+  test("acha sem espaço nem pontuação (rezero → Re:Zero)", () => {
+    expect(rankMatches(SEED_ANIME, "rezero")[0].id).toBe("re-zero-kara-hajimeru-isekai-seikatsu");
+    expect(rankMatches(SEED_ANIME, "Re Zero")[0].id).toBe("re-zero-kara-hajimeru-isekai-seikatsu");
+    expect(rankMatches(SEED_ANIME, "spyxfamily")[0].id).toBe("spy-x-family");
+  });
   test("busca vazia não retorna nada", () => {
     expect(rankMatches(SEED_ANIME, "   ")).toEqual([]);
   });
@@ -85,9 +90,9 @@ describe("catálogo importado", () => {
     expect(JSON.stringify(SEED_ANIME)).not.toMatch(/https?:\/\//);
     for (const a of SEED_ANIME) if (a.cover !== null) expect(a.cover).toMatch(/^\/[A-Za-z0-9_-]{5,64}\.(jpg|png)$/);
   });
-  test("2.000 animes da base + temporadas que faltavam (TMDB)", () => {
+  test("6.300 animes da base + temporadas que faltavam (TMDB)", () => {
     const extra = (generated.anime as (CatalogRow & { extraSeason?: boolean })[]).filter((a) => a.extraSeason).length;
-    expect(SEED_ANIME.length - extra).toBe(2000);
+    expect(SEED_ANIME.length - extra).toBe(6300);
     expect(extra).toBeGreaterThan(0);
   });
 });

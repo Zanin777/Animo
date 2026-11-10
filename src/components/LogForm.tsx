@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth";
 import { closeLog } from "./LogDrawer";
 import { AnimeSearch } from "@/components/AnimeSearch";
 import { Poster } from "@/components/Poster";
+import { PosterWall } from "@/components/PosterWall";
 import { StarRating } from "@/components/StarRating";
 import { btnGhost, btnPrimary, card, input } from "@/components/ui";
 import type { Anime } from "@/lib/catalog/provider";
@@ -33,11 +34,21 @@ export function LogForm(props: Props) {
   if (auth.status === "loading") return null;
   if (auth.status === "guest") {
     return (
-      <div className={`${card} grid justify-items-start gap-3 p-4`}>
-        <p>{t.log.loginRequired}</p>
-        <Link href="/entrar" className={btnPrimary} onClick={closeLog}>
-          {t.auth.signinCta}
-        </Link>
+      // capas em perspectiva no alto do cartão, o convite embaixo
+      <div className={`${card} overflow-hidden`}>
+        <PosterWall cols={8} className="h-36 sm:h-44" />
+        <div className="grid justify-items-start gap-3 p-4 sm:p-5">
+          <p className="text-lg font-bold">{t.log.loginRequired}</p>
+          <p className="text-sm text-muted">{t.auth.guestCta}</p>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link href="/entrar" className={btnPrimary} onClick={closeLog}>
+              {t.auth.signinCta}
+            </Link>
+            <Link href="/cadastro" className="text-sm underline decoration-link-line underline-offset-4" onClick={closeLog}>
+              {t.auth.signupCta}
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }

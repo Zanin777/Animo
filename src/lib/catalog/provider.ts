@@ -51,18 +51,23 @@ export function normalize(s: string): string {
     .trim();
 }
 
-/** Ordena por relevância: começa com a busca > contém a busca. */
+/**
+ * Ordena por relevância: começa com a busca > contém a busca.
+ * Também compara sem espaços: "rezero" acha "Re:Zero", "spyxfamily" acha "Spy x Family".
+ */
 export function rankMatches(list: Anime[], query: string, limit = 20): Anime[] {
   const q = normalize(query);
   if (!q) return [];
+  const qc = q.replaceAll(" ", "");
   const scored: { a: Anime; score: number }[] = [];
   for (const a of list) {
     const names = [a.title, a.titleOriginal ?? "", ...a.aliases].map(normalize);
     let score = 0;
     for (const n of names) {
-      if (n === q) score = Math.max(score, 3);
-      else if (n.startsWith(q)) score = Math.max(score, 2);
-      else if (n.includes(q)) score = Math.max(score, 1);
+      const nc = n.replaceAll(" ", "");
+      if (n === q || nc === qc) score = Math.max(score, 3);
+      else if (n.startsWith(q) || nc.startsWith(qc)) score = Math.max(score, 2);
+      else if (n.includes(q) || nc.includes(qc)) score = Math.max(score, 1);
     }
     if (score) scored.push({ a, score });
   }

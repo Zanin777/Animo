@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, ViewTransition } from "react";
 import type { Anime } from "@/lib/catalog/provider";
 import { posterStyle, posterTitleSize } from "@/lib/poster";
 import { t } from "@/messages";
@@ -16,6 +16,23 @@ type Props = {
 // Só nomes de arquivo de capa do AniList; qualquer outra coisa cai no pôster tipográfico.
 const COVER_PATH = /^\/[A-Za-z0-9_-]{5,64}\.(jpg|png)$/;
 const COVER_BASE = "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large";
+
+/** URL da capa (para fundos desfocados etc.) ou null quando não há capa válida. */
+export function coverUrl(anime: Pick<Anime, "cover">): string | null {
+  return anime.cover && COVER_PATH.test(anime.cover) ? `${COVER_BASE}${anime.cover}` : null;
+}
+
+/**
+ * Pôster que "voa" entre páginas: mesmo nome na grade da busca e no topo da página
+ * do anime. Use só onde o anime aparece uma vez na tela (nome repetido cancela a animação).
+ */
+export function SharedPoster({ anime, className = "" }: { anime: Pick<Anime, "id" | "title" | "year" | "kind" | "cover">; className?: string }) {
+  return (
+    <ViewTransition name={`poster-${anime.id}`} share="morph" default="none">
+      <Poster anime={anime} className={className} />
+    </ViewTransition>
+  );
+}
 
 /**
  * Capa do AniList quando existe; senão (ou se a imagem falhar) o pôster

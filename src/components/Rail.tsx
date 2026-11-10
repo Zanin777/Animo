@@ -44,7 +44,10 @@ export function Rail({ children, label, className = "" }: { children: ReactNode;
         onScroll={update}
         role="region"
         aria-label={label}
-        className={`no-scrollbar -mx-4 flex snap-x scroll-px-4 gap-4 overflow-x-auto px-4 pt-3 pb-3 ${className}`}
+        // Rolagem horizontal corta o que passa da caixa na vertical também. O pôster
+        // cresce ~15px para cima ao passar o cursor (escala + subida + contorno):
+        // pt-5 dá essa folga e -mt-2 devolve o espaço, sem empurrar o que vem antes.
+        className={`no-scrollbar -mx-4 -mt-2 flex snap-x scroll-px-4 gap-4 overflow-x-auto px-4 pt-5 pb-3 ${className}`}
       >
         {children}
       </div>

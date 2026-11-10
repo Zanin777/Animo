@@ -26,6 +26,7 @@ const SOURCE = {
 
 const root = new URL("..", import.meta.url);
 const OUT = fileURLToPath(new URL("src/lib/catalog/catalog.generated.json", root));
+const ANI_IDS_OUT = fileURLToPath(new URL("src/lib/catalog/anilist-ids.generated.json", root));
 const CURATED = JSON.parse(readFileSync(new URL("tools/catalog-curated.json", root), "utf8")).items;
 // Ids do TMDB já encontrados (tools/fetch-covers.mjs): episódios e temporadas.
 const COVERS_FILE = new URL("tools/tmdb-covers.json", root);
@@ -38,7 +39,7 @@ if (!input) {
   process.exit(1);
 }
 const li = rest.indexOf("--limit");
-const LIMIT = li >= 0 ? Number(rest[li + 1]) : 2000;
+const LIMIT = li >= 0 ? Number(rest[li + 1]) : 6300;
 
 // ── integridade ──
 const buf = readFileSync(input);
@@ -97,6 +98,7 @@ function toAnime(a, id, extraAliases = []) {
     const c = clean(s);
     const n = norm(c);
     if (!c || c.length > 100 || seen.has(n)) continue;
+    if (/https?:\/\/|www\./i.test(c)) continue; // a base às vezes traz um link no lugar de apelido
     if (!extraAliases.includes(s) && !LATIN.test(c)) continue; // busca é em PT-BR: fica com alfabeto latino
     seen.add(n);
     aliases.push(c);
@@ -159,14 +161,35 @@ const ANI_FILE = new URL("tools/anilist-covers.json", root);
 const aniCache = existsSync(ANI_FILE) ? JSON.parse(readFileSync(ANI_FILE, "utf8")) : {};
 await fetchCovers(out.map((a) => a.anilist).filter(Boolean), aniCache);
 writeFileSync(ANI_FILE, JSON.stringify(aniCache) + "\n");
+// O id do AniList NÃO vai para o catálogo que o navegador baixa: fica num arquivo
+// só do servidor (a rota /api/synopsis/[id] usa para buscar a sinopse sob demanda).
+const aniIds = {};
+const aniByShow = new Map(); // série do TMDB → id do AniList da 1ª temporada que temos
 for (const a of out) {
   const c = aniCache[a.anilist];
   a.cover = typeof c === "string" && POSTER_PATH.test(c) ? c : null;
+  if (Number.isInteger(a.anilist) && a.anilist > 0) {
+    aniIds[a.id] = a.anilist;
+    if (a.tmdb?.type === "tv") {
+      const cur = aniByShow.get(a.tmdb.id);
+      if (!cur || a.tmdb.season < cur.season || (a.tmdb.season === cur.season && a.tmdb.offset < cur.offset)) {
+        aniByShow.set(a.tmdb.id, { season: a.tmdb.season, offset: a.tmdb.offset, anilist: a.anilist });
+      }
+    }
+  }
   delete a.anilist;
 }
 // temporadas que o TMDB tem e o catálogo não (tools/fill-seasons.mjs)
 const SHOWS_FILE = new URL("tools/tmdb-shows.json", root);
-if (existsSync(SHOWS_FILE)) out.push(...buildExtraSeasons(out, JSON.parse(readFileSync(SHOWS_FILE, "utf8"))));
+if (existsSync(SHOWS_FILE)) {
+  const extra = buildExtraSeasons(out, JSON.parse(readFileSync(SHOWS_FILE, "utf8")));
+  // temporada extra não tem página própria no AniList: usa a da série
+  for (const e of extra) {
+    const base = aniByShow.get(e.tmdb.id);
+    if (base) aniIds[e.id] = base.anilist;
+  }
+  out.push(...extra);
+}
 
 // ── validação final: se algo fugir do schema, nada é gravado ──
 for (const a of out) {
@@ -183,4 +206,5 @@ for (const a of out) {
 
 out.sort((x, y) => x.title.localeCompare(y.title));
 writeFileSync(OUT, JSON.stringify({ source: { ...SOURCE, lastUpdate: db.lastUpdate }, anime: out }) + "\n");
+writeFileSync(ANI_IDS_OUT, JSON.stringify(Object.fromEntries(Object.entries(aniIds).sort(([x], [y]) => (x < y ? -1 : 1)))) + "\n");
 console.log(`ok: ${out.length} animes (${CURATED.length} curados, ${out.filter((a) => a.cover).length} com capa) → ${OUT}`);
