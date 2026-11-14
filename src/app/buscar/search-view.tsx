@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { AnimeSearch } from "@/components/AnimeSearch";
 import { Poster, SharedPoster } from "@/components/Poster";
@@ -38,14 +38,20 @@ function Tile({ anime, caption, shared, index }: { anime: Anime; caption?: React
   );
 }
 
-export function SearchView() {
+/** Lê ?q= (busca da barra do topo); trocar o texto recria a busca já preenchida. */
+export function SearchRoute() {
+  const q = useSearchParams().get("q")?.slice(0, 100) ?? "";
+  return <SearchView key={q} initialQuery={q} />;
+}
+
+export function SearchView({ initialQuery = "" }: { initialQuery?: string }) {
   const router = useRouter();
   const catalog = useCatalog();
   const featured = FEATURED_IDS.map(catalog.get).filter((a) => a !== null);
   // o mesmo anime nos resultados e nos destaques: só o dos resultados "voa" (nome repetido cancela a animação)
   const [inResults, setInResults] = useState<Anime[]>([]);
   const resultIds = new Set(inResults.map((a) => a.id));
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery);
   const { people, done } = usePeopleSearch(query);
   const atSearch = query.trim().startsWith("@");
 
@@ -55,6 +61,7 @@ export function SearchView() {
       <AnimeSearch
         large
         autoFocus
+        initialQuery={initialQuery}
         placeholder={t.search.placeholderPeople}
         onQuery={setQuery}
         before={

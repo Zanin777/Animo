@@ -22,12 +22,14 @@ type Props = {
   before?: React.ReactNode;
   /** texto de ajuda dentro do campo */
   placeholder?: string;
+  /** texto já preenchido (ex.: vindo da busca da barra do topo) */
+  initialQuery?: string;
 };
 
 /** Campo de busca + "Adicionar ao catálogo" quando falta o título. */
-export function AnimeSearch({ onPick, autoFocus, render, onResults, large = false, onQuery, before, placeholder = t.search.placeholder }: Props) {
+export function AnimeSearch({ onPick, autoFocus, render, onResults, large = false, onQuery, before, placeholder = t.search.placeholder, initialQuery = "" }: Props) {
   const catalog = useCatalog();
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(initialQuery);
   const [results, setResults] = useState<Anime[]>([]);
   const [creating, setCreating] = useState(false);
 

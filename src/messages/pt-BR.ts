@@ -11,6 +11,10 @@ export const ptBR = {
     lists: "Listas",
     profile: "Perfil",
     signin: "Entrar",
+    signup: "Criar conta",
+    searchPlaceholder: "Buscar anime ou @pessoa",
+    searchHint: "Aperte / para buscar",
+    account: "Menu da conta",
   },
   status: {
     want: "Quero ver",
