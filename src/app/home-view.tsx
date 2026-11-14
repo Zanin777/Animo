@@ -25,6 +25,7 @@ import {
   TrendingSection,
   marqueeItems,
 } from "./home-sections";
+import { Spotlight, spotlightSlides } from "./home-spotlight";
 
 type Watching = { item: LibraryItem; anime: Anime };
 
@@ -60,6 +61,12 @@ export function HomeView() {
         </span>
         <ThemeSwitch />
       </div>
+
+      {catalog.ready && snap.ready && (
+        <div className="mb-8">
+          <Spotlight slides={spotlightSlides(snap, catalog)} />
+        </div>
+      )}
 
       {isNew ? <Welcome /> : <Hello name={state.profile.displayName} watching={watching} />}
 
