@@ -38,13 +38,6 @@ import { t } from "@/messages";
 /** href = o número leva a uma lista (seguidores, seguindo) */
 type Stat = { value: number; label: string; href?: string };
 
-/** Link invisível por cima da célula do número (mantém a lista <dl> válida). */
-function StatLink({ s }: { s: Stat }) {
-  return s.href ? (
-    <Link href={s.href} className="absolute inset-0 rounded-[inherit] outline-offset-[-2px]" aria-label={`${s.value} ${s.label}`} />
-  ) : null;
-}
-
 const NAME_MAX = 50;
 const BIO_MAX = 300;
 const btnOutline = `${btnGhost} border border-line`;
@@ -54,11 +47,9 @@ export { nameColorOf };
 export type ProfileSide = { genres: string[]; watching: Anime[] };
 
 /**
- * Cabeçalho do perfil. Ao editar, ele vira a prévia ao vivo do rascunho
- * (foto, capa, cores, destaque) e o editor aparece logo abaixo.
- * Com capa: a imagem inteira em cima (16:5) e a foto encostada na borda de baixo;
- * o nome fica sempre fora da imagem. No computador, uma coluna ao lado com números,
- * gêneros e o que está assistindo.
+ * Cabeçalho do perfil: capa larga (a enviada, ou um mosaico dos favoritos),
+ * foto grande sobre a borda da capa, nome, @, bio, números em linha e gêneros.
+ * Ao editar, ele vira a prévia ao vivo do rascunho e o editor aparece logo abaixo.
  * readOnly = perfil público visto por outra pessoa.
  */
 export function ProfileHeader({
@@ -81,44 +72,74 @@ export function ProfileHeader({
   const banner = storageUrl(shown.bannerUrl);
 
   return (
-    <header className="relative isolate -mx-4 mb-2 px-4 pt-6 pb-5 sm:rounded-2xl" style={draft ? accentStyle(draft.accent) : undefined}>
-      {banner ? <Banner src={banner} /> : <BlurBackdrop backdrop={backdrop} />}
+    <header className="relative mb-2" style={draft ? accentStyle(draft.accent) : undefined}>
+      <Cover banner={banner} backdrop={backdrop} />
 
-      <div className="md:grid md:grid-cols-[minmax(0,1fr)_15rem] md:gap-10">
-        <div className="min-w-0">
-          <Identity
-            profile={shown}
-            readOnly={readOnly}
-            overBanner={banner !== null}
-            action={readOnly ? <FollowButton follows={follows} /> : null}
-          />
-
-          {!readOnly && !draft && (
-            <div className="mt-5 flex flex-wrap items-center gap-2">
-              <button type="button" className={btnOutline} onClick={() => setDraft(profile)}>
-                {t.profile.edit}
-              </button>
-              <AccountBadge handle={profile.handle} />
+      <div className="px-1 sm:px-6">
+        <div className="flex flex-wrap items-end gap-x-5 gap-y-3">
+          <span className="relative -mt-12 flex-none rounded-full bg-bg ring-4 ring-bg sm:-mt-16">
+            <Avatar profile={shown} size={112} />
+          </span>
+          <Identity profile={shown} readOnly={readOnly} />
+          {!draft && (
+            <div className="flex flex-wrap items-center gap-2 pb-1">
+              {readOnly ? (
+                <FollowButton follows={follows} />
+              ) : (
+                <>
+                  <button type="button" className={btnPrimary} onClick={() => setDraft(profile)}>
+                    {t.profile.edit}
+                  </button>
+                  <AccountBadge handle={profile.handle} />
+                </>
+              )}
             </div>
           )}
-          {!readOnly && draft && <ProfileEditor saved={profile} draft={draft} setDraft={setDraft} onClose={() => setDraft(null)} />}
         </div>
 
-        <SidePanel stats={stats} side={side} withBanner={banner !== null} />
-      </div>
+        {(shown.bio || !readOnly) && (
+          <p className={`mt-4 max-w-prose ${shown.bio ? "" : "text-sm text-muted italic"}`}>{shown.bio || t.profile.noBio}</p>
+        )}
 
-      {/* celular: números numa linha (no computador ficam na coluna ao lado) */}
-      <dl className="mt-6 grid grid-cols-4 divide-x divide-line border-y border-line py-3 text-center md:hidden">
-        {stats.map((s) => (
-          <div key={s.label} className={`relative px-1 ${s.href ? "transition-colors hover:bg-card" : ""}`}>
-            <dd className="flex justify-center font-display text-2xl leading-none text-accent">
-              <SlidingNumber value={s.value} />
-            </dd>
-            <dt className={`mt-1 text-[11px] leading-tight text-muted ${s.href ? "underline decoration-line underline-offset-2" : ""}`}>{s.label}</dt>
-            <StatLink s={s} />
-          </div>
-        ))}
-      </dl>
+        {/* números em linha; seguidores e seguindo levam às listas */}
+        <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-2">
+          {stats.map((s) => {
+            const body = (
+              <>
+                <span className="font-display text-xl leading-none text-fg">
+                  <SlidingNumber value={s.value} />
+                </span>
+                <span className="text-sm text-muted">{s.label}</span>
+              </>
+            );
+            return (
+              <li key={s.label}>
+                {s.href ? (
+                  <Link href={s.href} className="inline-flex items-baseline gap-1.5 underline-offset-4 hover:underline">
+                    {body}
+                  </Link>
+                ) : (
+                  <span className="inline-flex items-baseline gap-1.5">{body}</span>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+
+        {side.genres.length > 0 && (
+          <ul className="mt-4 flex flex-wrap gap-1.5" aria-label={t.profile.topGenres}>
+            {side.genres.map((g, i) => (
+              <li key={g} className={`rounded-full border px-2.5 py-0.5 text-xs ${i === 0 ? "border-accent text-accent" : "border-line text-muted"}`}>
+                {t.genre[g] ?? g}
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <Featured profile={shown} />
+
+        {!readOnly && draft && <ProfileEditor saved={profile} draft={draft} setDraft={setDraft} onClose={() => setDraft(null)} />}
+      </div>
     </header>
   );
 }
@@ -126,183 +147,104 @@ export function ProfileHeader({
 /** Seguir / Seguindo no perfil de outra pessoa. Sem conta: leva para entrar. */
 function FollowButton({ follows }: { follows: FollowInfo }) {
   if (follows.followers === null || follows.viewer === "self" || follows.viewer === "loading") return null;
+  if (follows.viewer === "guest") {
+    return (
+      <Link href="/entrar" className={btnPrimary}>
+        {t.profile.follow}
+      </Link>
+    );
+  }
   return (
-    <div className="mt-4">
-      {follows.viewer === "guest" ? (
-        <Link href="/entrar" className={btnPrimary}>
-          {t.profile.follow}
-        </Link>
+    <button
+      type="button"
+      aria-pressed={follows.isFollowing}
+      disabled={follows.busy}
+      onClick={follows.toggle}
+      className={`${follows.isFollowing ? btnOutline : btnPrimary} group min-w-28`}
+    >
+      {follows.isFollowing ? (
+        <>
+          <span className="group-hover:hidden">{t.profile.following}</span>
+          <span className="hidden group-hover:inline">{t.profile.unfollow}</span>
+        </>
       ) : (
-        <button
-          type="button"
-          aria-pressed={follows.isFollowing}
-          disabled={follows.busy}
-          onClick={follows.toggle}
-          className={`${follows.isFollowing ? btnOutline : btnPrimary} group min-w-28`}
-        >
-          {follows.isFollowing ? (
-            <>
-              <span className="group-hover:hidden">{t.profile.following}</span>
-              <span className="hidden group-hover:inline">{t.profile.unfollow}</span>
-            </>
-          ) : (
-            t.profile.follow
-          )}
-        </button>
+        t.profile.follow
       )}
-    </div>
+    </button>
   );
 }
 
-/** Capa enviada: inteira, sem véu por cima. */
-function Banner({ src }: { src: string }) {
+/** Capa larga: a imagem enviada inteira; sem ela, um mosaico das capas dos favoritos. */
+function Cover({ banner, backdrop }: { banner: string | null; backdrop: Anime[] }) {
+  const tiles = backdrop.length ? Array.from({ length: 6 }, (_, i) => backdrop[i % backdrop.length]) : [];
   return (
-    <div className="relative -mx-4 -mt-6 aspect-[16/5] overflow-hidden bg-card sm:mx-0 sm:mt-0 sm:rounded-xl">
-      <Image src={src} alt="" fill sizes="(min-width: 768px) 736px, 100vw" className="object-cover" priority />
-    </div>
-  );
-}
-
-/** Sem capa: as capas dos favoritos borradas atrás do topo (como antes). */
-function BlurBackdrop({ backdrop }: { backdrop: Anime[] }) {
-  return (
-    <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden sm:rounded-2xl" aria-hidden="true">
-      {backdrop.length > 0 && (
-        <div className="absolute inset-0 grid scale-110 grid-cols-4 opacity-40 blur-2xl">
-          {Array.from({ length: 4 }, (_, i) => backdrop[i % backdrop.length]).map((a, i) => (
-            <Poster key={`${a.id}-${i}`} anime={a} className="h-full !rounded-none !shadow-none" />
-          ))}
-        </div>
-      )}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-bg/70 to-bg" />
-    </div>
-  );
-}
-
-function Identity({
-  profile,
-  readOnly,
-  overBanner,
-  action,
-}: {
-  profile: LocalProfile;
-  readOnly: boolean;
-  overBanner: boolean;
-  /** botão logo abaixo da bio (Seguir, no perfil de outra pessoa) */
-  action?: ReactNode;
-}) {
-  const catalog = useCatalog();
-  const name = profile.displayName || (readOnly ? `@${profile.handle}` : t.profile.defaultName);
-  const dev = profile.role === "dev";
-  const featured = profile.featuredAnimeId ? catalog.get(profile.featuredAnimeId) : null;
-
-  return (
-    <>
-      <div className="flex items-start gap-4">
-        {/* com capa, a foto sobe e encosta na borda de baixo da imagem */}
-        <span className={`relative flex-none rounded-full ${overBanner ? "-mt-12 ring-4 ring-bg sm:-mt-14" : ""}`}>
-          <Avatar profile={profile} size={92} />
-        </span>
-        <div className={`min-w-0 flex-1 ${overBanner ? "pt-3" : "pt-1"}`}>
-          <h1 className="font-display text-3xl leading-tight break-words sm:text-4xl" style={{ color: nameColorOf(profile) }}>
-            {name}
-          </h1>
-          {dev && (
-            <p className="mt-0.5 font-mincho text-base tracking-wide" style={{ color: DEV_GOLD }}>
-              {t.profile.devTagline}
-            </p>
-          )}
-          {profile.role === "plus" && (
-            <p className="mt-1.5 mb-0.5 inline-flex items-center gap-1.5 rounded-full border border-accent px-2.5 py-0.5 text-xs font-bold text-accent">
-              <IconSpark size={12} strokeWidth={2} />
-              {t.profile.premium}
-            </p>
-          )}
-          {profile.handle && <p className="text-sm text-muted">@{profile.handle}</p>}
-          {(profile.bio || !readOnly) && (
-            <p className={`mt-2 max-w-prose text-sm ${profile.bio ? "" : "text-muted italic"}`}>{profile.bio || t.profile.noBio}</p>
-          )}
-          {action}
-        </div>
-      </div>
-
-      {featured && (
-        <Link
-          href={`/anime/${featured.id}`}
-          className="mt-6 flex max-w-xl items-start gap-4 rounded-xl bg-card/80 p-3 pr-5 transition-colors hover:bg-card sm:gap-5"
-        >
-          <Poster anime={featured} className="w-20 flex-none sm:w-24" />
-          <span className="min-w-0 flex-1 py-0.5">
-            <span className="block text-xs font-bold text-accent">{t.profile.featured}</span>
-            <span className="mt-1 block font-display text-lg leading-tight break-words sm:text-xl">{featured.title}</span>
-            <span className="mt-1 block text-xs text-muted">
-              {[featured.year, t.kind[featured.kind], featured.episodes && featured.kind !== "movie" ? t.anime.episodes(featured.episodes) : null]
-                .filter(Boolean)
-                .join(" · ")}
-            </span>
-            {featured.genres.length > 0 && (
-              <span className="mt-2 flex flex-wrap gap-1.5">
-                {featured.genres.slice(0, 3).map((g) => (
-                  <span key={g} className="rounded-full border border-line px-2 py-px text-xs">
-                    {t.genre[g] ?? g}
-                  </span>
-                ))}
-              </span>
-            )}
-            {profile.featuredNote && <span className="mt-2.5 block text-sm">“{profile.featuredNote}”</span>}
-            <SynopsisSnippet key={featured.id} anime={featured} className="mt-2.5 text-sm text-muted" />
-          </span>
-        </Link>
-      )}
-    </>
-  );
-}
-
-/** Coluna ao lado (computador): números 2×2, gêneros que mais vê e o que está assistindo. */
-function SidePanel({ stats, side, withBanner }: { stats: Stat[]; side: ProfileSide; withBanner: boolean }) {
-  return (
-    <aside className={`hidden content-start gap-6 md:grid ${withBanner ? "pt-4" : "pt-1"}`}>
-      <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-line bg-line">
-        {stats.map((s) => (
-          <div key={s.label} className={`relative bg-bg px-3 py-3 ${s.href ? "transition-colors hover:bg-card" : ""}`}>
-            <dd className="font-display text-2xl leading-none text-accent">
-              <SlidingNumber value={s.value} />
-            </dd>
-            <dt className={`mt-1 text-xs leading-tight text-muted ${s.href ? "underline decoration-line underline-offset-2" : ""}`}>{s.label}</dt>
-            <StatLink s={s} />
+    <div className="relative -mx-4 h-36 overflow-hidden bg-card sm:mx-0 sm:h-auto sm:aspect-[16/5] sm:rounded-2xl" aria-hidden="true">
+      {banner ? (
+        <Image src={banner} alt="" fill sizes="(min-width: 1120px) 1056px, (min-width: 768px) 736px, 100vw" className="object-cover" priority />
+      ) : tiles.length > 0 ? (
+        <>
+          <div className="absolute inset-0 grid auto-cols-[25%] grid-flow-col sm:auto-cols-[calc(100%/6)]">
+            {tiles.map((a, i) => (
+              <Poster key={`${a.id}-${i}`} anime={a} className="h-full !rounded-none !shadow-none" />
+            ))}
           </div>
-        ))}
-      </dl>
-
-      {side.genres.length > 0 && (
-        <div>
-          <h2 className="mb-2 text-xs font-bold text-muted">{t.profile.topGenres}</h2>
-          <ul className="flex flex-wrap gap-1.5">
-            {side.genres.map((g, i) => (
-              <li key={g} className={`rounded-full border px-2.5 py-0.5 text-sm ${i === 0 ? "border-accent text-accent" : "border-line"}`}>
-                {t.genre[g] ?? g}
-              </li>
-            ))}
-          </ul>
-        </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/50 to-bg/10" />
+        </>
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-br from-accent/45 via-card to-bg" />
       )}
+    </div>
+  );
+}
 
-      {side.watching.length > 0 && (
-        <div>
-          <h2 className="mb-2 text-xs font-bold text-muted">{t.home.watchingTitle}</h2>
-          <ul className="grid gap-2">
-            {side.watching.map((a) => (
-              <li key={a.id}>
-                <Link href={`/anime/${a.id}`} className="flex items-center gap-2.5 rounded-md transition-colors hover:bg-card">
-                  <Poster anime={a} size="xs" className="w-8 flex-none" />
-                  <span className="min-w-0 truncate text-sm">{a.title}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </aside>
+function Identity({ profile, readOnly }: { profile: LocalProfile; readOnly: boolean }) {
+  const name = profile.displayName || (readOnly ? `@${profile.handle}` : t.profile.defaultName);
+  return (
+    <div className="min-w-0 flex-1 pt-2">
+      <h1 className="font-display text-3xl leading-tight break-words sm:text-4xl" style={{ color: nameColorOf(profile) }}>
+        {name}
+      </h1>
+      <p className="mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm text-muted">
+        {profile.handle && <span>@{profile.handle}</span>}
+        {profile.role === "dev" && (
+          <span className="font-mincho text-base tracking-wide" style={{ color: DEV_GOLD }}>
+            {t.profile.devTagline}
+          </span>
+        )}
+        {profile.role === "plus" && (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-accent px-2.5 py-0.5 text-xs font-bold text-accent">
+            <IconSpark size={12} strokeWidth={2} />
+            {t.profile.premium}
+          </span>
+        )}
+      </p>
+    </div>
+  );
+}
+
+/** Anime em destaque (Premium): capa, dados e a frase do dono. */
+function Featured({ profile }: { profile: LocalProfile }) {
+  const catalog = useCatalog();
+  const featured = profile.featuredAnimeId ? catalog.get(profile.featuredAnimeId) : null;
+  if (!featured) return null;
+  return (
+    <Link
+      href={`/anime/${featured.id}`}
+      className="mt-6 flex max-w-2xl items-start gap-4 rounded-xl border border-line bg-card/60 p-3 pr-5 transition-colors hover:bg-card sm:gap-5"
+    >
+      <Poster anime={featured} className="w-20 flex-none sm:w-24" />
+      <span className="min-w-0 flex-1 py-0.5">
+        <span className="block text-xs font-bold text-accent">{t.profile.featured}</span>
+        <span className="mt-1 block font-display text-lg leading-tight break-words sm:text-xl">{featured.title}</span>
+        <span className="mt-1 block text-xs text-muted">
+          {[featured.year, t.kind[featured.kind], featured.episodes && featured.kind !== "movie" ? t.anime.episodes(featured.episodes) : null]
+            .filter(Boolean)
+            .join(" · ")}
+        </span>
+        {profile.featuredNote && <span className="mt-2.5 block text-sm">“{profile.featuredNote}”</span>}
+        <SynopsisSnippet key={featured.id} anime={featured} className="mt-2.5 text-sm text-muted" />
+      </span>
+    </Link>
   );
 }
 

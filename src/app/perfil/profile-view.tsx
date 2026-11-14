@@ -106,7 +106,8 @@ export function ProfileBody({ state, userId = null, readOnly = false }: { state:
 
   return (
     <CoverOverrides.Provider value={covers}>
-    <div style={accentStyle(state.profile.accent)}>
+    {/* em telas largas o perfil ocupa a mesma largura do Início */}
+    <div className="min-[1120px]:-mx-36" style={accentStyle(state.profile.accent)}>
       <ProfileHeader
         readOnly={readOnly}
         side={side}
@@ -149,6 +150,21 @@ export function ProfileBody({ state, userId = null, readOnly = false }: { state:
 
       {section === "overview" && (
         <>
+          {side.watching.length > 0 && (
+            <>
+              <SectionTitle>{t.home.watchingTitle}</SectionTitle>
+              <ul className="grid gap-2 sm:grid-cols-3">
+                {side.watching.map((a) => (
+                  <li key={a.id}>
+                    <Link href={`/anime/${a.id}`} className="flex items-center gap-3 rounded-lg bg-card/60 p-2 pr-3 transition-colors hover:bg-card">
+                      <Poster anime={a} size="xs" className="w-10 flex-none" />
+                      <span className="min-w-0 truncate text-sm font-bold">{a.title}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
 
           {/* favoritos: 4 grandes, numerados com selo; vazio = "+" para escolher */}
           <SectionTitle>{t.profile.favorites}</SectionTitle>
