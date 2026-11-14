@@ -16,7 +16,6 @@ import { diary, useDiary } from "@/lib/diary/store";
 import { MAX_FAVORITES, isPremium, type DiaryState, type Entry, type WatchStatus } from "@/lib/diary/types";
 import { CoverOverrides, useCoverChoices } from "@/lib/covers/choices";
 import { accentStyle } from "@/lib/profile/accents";
-import { formatRating } from "@/lib/rating";
 import { useAuth } from "@/lib/auth";
 import { useFollows } from "@/lib/social/follows";
 import { useCurrentYear } from "@/lib/use-current-year";
@@ -82,6 +81,10 @@ export function ProfileBody({ state, userId = null, readOnly = false }: { state:
     .filter((a): a is Anime => a !== null);
 
   const maxBar = Math.max(1, ...stats.distribution);
+  const ratedCount = stats.distribution.reduce((s, n) => s + n, 0);
+  // nota que mais aparece (empate: a maior)
+  const modeHalf = ratedCount ? stats.distribution.reduce((best, n, i, d) => (n >= d[best] ? i : best), 0) + 1 : null;
+  const stars = (half: number) => `${"★".repeat(Math.floor(half / 2))}${half % 2 ? "½" : ""}`;
   const counts: Record<Section, number | null> = {
     overview: null,
     diary: entries.length,
@@ -275,8 +278,9 @@ export function ProfileBody({ state, userId = null, readOnly = false }: { state:
 
           {/* notas */}
           <SectionTitle>{readOnly ? t.profile.ratingsOther : t.profile.ratingsTitle}</SectionTitle>
-          <div className={`${card} grid gap-4 p-4 sm:grid-cols-[auto_1fr] sm:items-center`}>
-            <div className="flex items-center gap-3">
+          <div className={`${card} grid gap-6 p-5 sm:grid-cols-[13rem_1fr] sm:items-end sm:gap-8 sm:p-6`}>
+            {/* resumo: média grande, quantas notas e a nota que mais dá */}
+            <div className="flex items-center gap-4 sm:flex-col sm:items-start">
               {stats.avgHalf !== null ? (
                 <span className="hanko hanko-lg">
                   <SlidingNumber value={stats.avgHalf / 2} decimals={1} />
@@ -284,24 +288,43 @@ export function ProfileBody({ state, userId = null, readOnly = false }: { state:
               ) : (
                 <span className="hanko hanko-lg opacity-40">–</span>
               )}
-              <div className="text-sm text-muted">
-                <div>{t.profile.statAvg}</div>
-                <div>{t.community.ratings(stats.distribution.reduce((s, n) => s + n, 0))}</div>
-              </div>
+              <dl className="grid gap-1 text-sm">
+                <div>
+                  <dt className="sr-only">{t.profile.statAvg}</dt>
+                  <dd className="text-muted">
+                    {t.profile.statAvg} · {t.community.ratings(ratedCount)}
+                  </dd>
+                </div>
+                {modeHalf !== null && (
+                  <div className="flex items-baseline gap-1.5">
+                    <dt className="text-muted">{t.profile.ratingMode}</dt>
+                    <dd className="font-bold text-accent">{stars(modeHalf)}</dd>
+                  </div>
+                )}
+              </dl>
             </div>
-            <div>
-              <div className="flex h-20 items-end gap-1" aria-label={t.profile.distribution}>
+
+            {/* uma coluna por meia estrela; a altura é a quantidade de notas */}
+            <figure aria-label={t.profile.distribution}>
+              <div className="grid h-36 grid-cols-10 items-end gap-1.5 sm:gap-2">
                 {stats.distribution.map((n, i) => (
-                  <div key={i} className="flex flex-1 flex-col justify-end" title={`${formatRating(i + 1)}: ${n}`}>
-                    <div className="w-full rounded-sm bg-accent" style={{ height: `${(n / maxBar) * 100}%`, minHeight: n ? 3 : 1, opacity: n ? 1 : 0.15 }} />
+                  <div key={i} className="flex h-full flex-col justify-end" title={`${stars(i + 1)}: ${n}`}>
+                    <span className={`mb-1 text-center text-xs tabular-nums ${n ? "font-bold text-fg" : "text-transparent"}`}>{n}</span>
+                    <div className="relative flex-1 overflow-hidden rounded-md bg-line/40">
+                      <div
+                        className="absolute inset-x-0 bottom-0 rounded-md bg-gradient-to-t from-accent to-accent/60 transition-[height] duration-500"
+                        style={{ height: n ? `${Math.max((n / maxBar) * 100, 6)}%` : 0 }}
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
-              <div className="mt-1 flex justify-between text-xs text-muted">
-                <span>½</span>
-                <span>★★★★★</span>
+              <div className="mt-2 grid grid-cols-10 gap-1.5 text-center text-[11px] text-muted sm:gap-2">
+                {stats.distribution.map((_, i) => (
+                  <span key={i}>{(i + 1) % 2 === 0 ? `${(i + 1) / 2}★` : i === 0 ? "½" : ""}</span>
+                ))}
               </div>
-            </div>
+            </figure>
           </div>
 
         </>
@@ -400,7 +423,7 @@ export function ProfileBody({ state, userId = null, readOnly = false }: { state:
           </div>
         ))}
 
-      {!readOnly && <Muted className="mt-10 text-xs">{t.profile.localNotice}</Muted>}
+      {!readOnly && !userId && <Muted className="mt-10 text-xs">{t.profile.localNotice}</Muted>}
     </div>
     </CoverOverrides.Provider>
   );

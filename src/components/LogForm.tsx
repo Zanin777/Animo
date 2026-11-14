@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/auth";
 import { closeLog } from "./LogDrawer";
 import { AnimeSearch } from "@/components/AnimeSearch";
 import Image from "next/image";
-import { IconPlus } from "@/components/Icons";
+import { IconBookmark, IconCheck, IconPlay, IconPlus } from "@/components/Icons";
 import { Poster, coverUrl } from "@/components/Poster";
 import { Tilt } from "@/components/Tilt";
 import { PosterWall } from "@/components/PosterWall";
@@ -15,6 +15,7 @@ import { btnPrimary, card, input } from "@/components/ui";
 import type { Anime } from "@/lib/catalog/provider";
 import { useCatalog } from "@/lib/catalog/local";
 import { diary } from "@/lib/diary/store";
+import type { WatchStatus } from "@/lib/diary/types";
 import { formatRating } from "@/lib/rating";
 import { t } from "@/messages";
 
@@ -22,6 +23,12 @@ export function todayISO(d = new Date()) {
   const p = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
+
+const STATUS_OPTIONS = [
+  ["watched", t.log.statusWatched, IconCheck],
+  ["watching", t.log.statusWatching, IconPlay],
+  ["want", t.log.statusWant, IconBookmark],
+] as const satisfies readonly (readonly [WatchStatus, string, unknown])[];
 
 type Props = {
   /** anime já escolhido (ex.: aberto pela página do anime) */
@@ -72,6 +79,7 @@ function LogFormFields({ presetId, onSaved, onClearPreset }: Props) {
   const anime = tab?.anime ?? chosen;
   const series = chosen ? (catalog.get(catalog.series.headOf(chosen.id)) ?? chosen) : null;
 
+  const [status, setStatus] = useState<WatchStatus>("watched");
   const [rating, setRating] = useState<number | null>(null);
   const [review, setReview] = useState("");
   const [date, setDate] = useState(todayISO);
@@ -79,7 +87,9 @@ function LogFormFields({ presetId, onSaved, onClearPreset }: Props) {
 
   function save() {
     if (!anime) return;
-    diary.addEntry({ animeId: anime.id, ratingHalf: rating, review, watchedOn: date, isRewatch: rewatch }, anime);
+    // só "Já assisti" vira registro no diário; os outros só mudam a biblioteca
+    if (status === "watched") diary.addEntry({ animeId: anime.id, ratingHalf: rating, review, watchedOn: date, isRewatch: rewatch }, anime);
+    else diary.setStatus(anime.id, status);
     onSaved(anime);
   }
 
@@ -179,6 +189,34 @@ function LogFormFields({ presetId, onSaved, onClearPreset }: Props) {
         </section>
       )}
 
+      {/* onde o anime entra: diário (já assisti), assistindo ou quero ver */}
+      <section className="rise" aria-label={t.log.statusTitle}>
+        <h2 className="mb-2 text-sm font-bold text-muted">{t.log.statusTitle}</h2>
+        <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label={t.log.statusTitle}>
+          {STATUS_OPTIONS.map(([value, label, Icon]) => {
+            const on = status === value;
+            return (
+              <button
+                key={value}
+                type="button"
+                role="radio"
+                aria-checked={on}
+                onClick={() => setStatus(value)}
+                className={`press grid cursor-pointer justify-items-center gap-1.5 rounded-xl border px-2 py-3 text-sm transition-colors ${
+                  on ? "border-active bg-card font-bold text-fg shadow-[0_0_0_1px_var(--active)]" : "border-line text-muted hover:border-fg/30 hover:text-fg"
+                }`}
+              >
+                <Icon size={20} className={on ? "text-active" : undefined} />
+                {label}
+              </button>
+            );
+          })}
+        </div>
+        <p className="mt-2 text-xs text-muted">{t.log.statusHint[status]}</p>
+      </section>
+
+      {status === "watched" && (
+        <>
       {/* nota */}
       <section className="rise" style={{ "--i": 1 } as React.CSSProperties} aria-label={t.log.step2}>
         <h2 className="mb-1 text-sm font-bold text-muted">{t.log.step2}</h2>
@@ -227,9 +265,11 @@ function LogFormFields({ presetId, onSaved, onClearPreset }: Props) {
           </div>
         </div>
       </details>
+        </>
+      )}
 
       <button type="button" className={`${btnPrimary} rise h-12 w-full text-base`} style={{ "--i": 3 } as React.CSSProperties} onClick={save}>
-        {t.log.save}
+        {status === "watched" ? t.log.save : status === "watching" ? t.log.saveWatching : t.log.saveWant}
       </button>
     </div>
   );

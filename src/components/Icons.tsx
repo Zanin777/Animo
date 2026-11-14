@@ -111,6 +111,21 @@ export const IconCheck = (p: P) => (
   </Svg>
 );
 
+/** Assistindo agora. */
+export const IconPlay = (p: P) => (
+  <Svg {...p}>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M10.5 9v6l4.5-3z" />
+  </Svg>
+);
+
+/** Quero ver (watchlist). */
+export const IconBookmark = (p: P) => (
+  <Svg {...p}>
+    <path d="M7 4.5h10v15l-5-3.5-5 3.5z" />
+  </Svg>
+);
+
 /** Capa / imagem larga. */
 export const IconImage = (p: P) => (
   <Svg {...p}>
