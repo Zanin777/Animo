@@ -40,14 +40,13 @@ export function CommunityReviews({ animeId }: { animeId: string }) {
     };
   }, [animeId]);
 
-  if (!SUPABASE_ENABLED) return null;
+  // sem reviews (ou ainda carregando) a seção some: não ocupa espaço só para dizer "nada"
+  if (!SUPABASE_ENABLED || load.status === "loading" || (load.status === "ok" && load.reviews.length === 0)) return null;
 
   return (
     <>
       <SectionTitle>{t.anime.reviewsTitle}</SectionTitle>
-      {load.status === "loading" && <Muted>{t.anime.reviewsLoading}</Muted>}
       {load.status === "error" && <Muted>{t.anime.reviewsError}</Muted>}
-      {load.status === "ok" && load.reviews.length === 0 && <Muted>{t.anime.reviewsEmpty}</Muted>}
       {load.status === "ok" && load.reviews.length > 0 && (
         <ul className={rows}>
           {load.reviews.map((r) => (

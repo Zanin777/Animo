@@ -176,8 +176,6 @@ export const ptBR = {
     addToList: "Adicionar a uma lista",
     notFound: "Anime não encontrado.",
     reviewsTitle: "Reviews",
-    reviewsEmpty: "Ninguém escreveu sobre este anime ainda.",
-    reviewsLoading: "Carregando reviews…",
     reviewsError: "Não deu para carregar as reviews agora.",
     synopsisLoading: "Carregando sinopse…",
     synopsisMore: "Ler mais",

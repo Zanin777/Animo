@@ -77,8 +77,8 @@ export function AnimeView() {
             <div className="absolute inset-0 bg-gradient-to-b from-bg/30 via-bg/75 to-bg" />
           </div>
         )}
-      <div className="grid grid-cols-[120px_1fr] gap-x-5 gap-y-4 sm:grid-cols-[200px_1fr] sm:gap-x-8 sm:grid-rows-[auto_1fr]">
-        <Tilt className="self-start shadow-[0_24px_48px_-16px_rgb(0_0_0/0.55)] sm:row-span-2">
+      <div className="grid grid-cols-[120px_1fr] gap-x-5 gap-y-4 sm:grid-cols-[200px_1fr] sm:gap-x-8 sm:grid-rows-[auto_auto_1fr]">
+        <Tilt className="self-start shadow-[0_24px_48px_-16px_rgb(0_0_0/0.55)] sm:row-span-3">
           <SharedPoster anime={anime} />
         </Tilt>
         <div className="min-w-0 sm:pt-2">
@@ -120,6 +120,38 @@ export function AnimeView() {
             )}
           </div>
         </div>
+        <div className="col-span-2 flex min-w-0 flex-wrap items-center gap-3 sm:col-span-1 sm:col-start-2">
+          <div className="inline-flex rounded-md bg-card p-1" role="group" aria-label={selectedTab ? t.seasons.long(selectedTab.season, selectedTab.part) : "Status"}>
+            {STATUSES.map((s) => {
+              const on = lib?.status === s;
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => diary.setStatus(season.id, on ? null : s)}
+                  className={`press cursor-pointer rounded-[5px] px-3 py-1.5 text-sm transition-colors ${
+                    on ? "bg-bg font-bold text-fg shadow-[0_1px_2px_rgb(0_0_0/0.18)]" : "text-muted hover:text-fg"
+                  }`}
+                >
+                  {t.status[s]}
+                </button>
+              );
+            })}
+          </div>
+          {lib?.status === "watching" && (
+            <>
+              <span className="text-sm text-muted">{t.home.episodeOf(lib.episodesWatched, season.episodes)}</span>
+              <button
+                type="button"
+                onClick={() => diary.plusOneEpisode(season)}
+                className="press cursor-pointer rounded-md bg-card px-2.5 py-1.5 text-xs font-bold text-fg hover:text-detail"
+              >
+                {t.home.plusOne}
+              </button>
+            </>
+          )}
+        </div>
         <Synopsis key={`s-${anime.id}`} anime={anime} className="col-span-2 min-w-0 sm:col-span-1 sm:col-start-2" />
       </div>
       </header>
@@ -138,39 +170,6 @@ export function AnimeView() {
       {seasons.length > 0 && (
         <SeasonsSection seasons={seasons} selectedId={season.id} onSelect={(s) => setPicked({ forId: id, season: s })} />
       )}
-
-      <div className="mt-6 flex flex-wrap items-center gap-3">
-      <div className="inline-flex rounded-md bg-card p-1" role="group" aria-label={selectedTab ? t.seasons.long(selectedTab.season, selectedTab.part) : "Status"}>
-        {STATUSES.map((s) => {
-          const on = lib?.status === s;
-          return (
-            <button
-              key={s}
-              type="button"
-              aria-pressed={on}
-              onClick={() => diary.setStatus(season.id, on ? null : s)}
-              className={`press cursor-pointer rounded-[5px] px-3 py-1.5 text-sm transition-colors ${
-                on ? "bg-bg font-bold text-fg shadow-[0_1px_2px_rgb(0_0_0/0.18)]" : "text-muted hover:text-fg"
-              }`}
-            >
-              {t.status[s]}
-            </button>
-          );
-        })}
-      </div>
-        {lib?.status === "watching" && (
-          <>
-            <span className="text-sm text-muted">{t.home.episodeOf(lib.episodesWatched, season.episodes)}</span>
-            <button
-              type="button"
-              onClick={() => diary.plusOneEpisode(season)}
-              className="press cursor-pointer rounded-md bg-card px-2.5 py-1.5 text-xs font-bold text-fg hover:text-detail"
-            >
-              {t.home.plusOne}
-            </button>
-          </>
-        )}
-      </div>
 
       {state.lists.length > 0 && (
         <form
@@ -195,10 +194,9 @@ export function AnimeView() {
         </form>
       )}
 
-      <SectionTitle>{t.anime.yourEntries}</SectionTitle>
-      {entries.length === 0 ? (
-        <Muted>{t.anime.noEntries}</Muted>
-      ) : (
+      {entries.length > 0 && (
+        <>
+        <SectionTitle>{t.anime.yourEntries}</SectionTitle>
         <div className={rows}>
           {entries.map((e) => (
             <div key={e.id} className="group relative">
@@ -215,6 +213,7 @@ export function AnimeView() {
             </div>
           ))}
         </div>
+        </>
       )}
 
       <CommunityReviews key={`r-${season.id}`} animeId={season.id} />

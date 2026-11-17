@@ -51,6 +51,9 @@ export function EpisodeList({ anime }: { anime: Anime }) {
   const avg = rated.length ? rated.reduce((s, [, v]) => s + v, 0) / rated.length : null;
   const best = rated.length ? Number(rated.sort((a, b) => b[1] - a[1] || Number(a[0]) - Number(b[0]))[0][0]) : null;
 
+  // sem nenhuma imagem (sem TMDB), linhas finas em vez de blocos coloridos só com o número
+  const compact = !!episodes && !episodes.some((e) => e.still);
+
   return (
     <section>
       <SectionTitle>
@@ -76,6 +79,7 @@ export function EpisodeList({ anime }: { anime: Anime }) {
                 rating={ratings[ep.number] ?? null}
                 watched={ep.number <= watchedUpTo}
                 isBest={ep.number === best}
+                compact={compact}
               />
             ))}
           </ol>
@@ -90,9 +94,32 @@ export function EpisodeList({ anime }: { anime: Anime }) {
   );
 }
 
-function EpisodeRow({ anime, ep, rating, watched, isBest }: { anime: Anime; ep: Episode; rating: number | null; watched: boolean; isBest: boolean }) {
+type RowProps = { anime: Anime; ep: Episode; rating: number | null; watched: boolean; isBest: boolean; compact: boolean };
+
+function EpisodeRow({ anime, ep, rating, watched, isBest, compact }: RowProps) {
   const { palette } = posterStyle(anime.title);
   const [failed, setFailed] = useState(false);
+  const rate = (v: number | null) => diary.rateEpisode(anime.id, ep.number, v);
+  if (compact) {
+    const meta = [ep.name ? t.episodes.ep(ep.number) : null, ep.airDate ? formatDate(ep.airDate) : null, ep.runtime ? t.episodes.min(ep.runtime) : null].filter(Boolean);
+    return (
+      <li id={`ep-${ep.number}`} className="scroll-mt-20 grid grid-cols-[2.25rem_1fr_auto] items-center gap-3 py-2.5">
+        <span className={`text-right font-display text-lg tabular-nums ${watched ? "text-active" : "text-muted"}`}>{ep.number}</span>
+        <div className="min-w-0">
+          <p className="truncate text-sm font-bold">
+            {ep.name || t.episodes.ep(ep.number)}
+            {watched && <span className={`ml-1.5 align-middle font-normal ${tag}`}>{t.episodes.watched}</span>}
+            {isBest && <span className="ml-1.5 text-[11px] text-accent">{t.episodes.best}</span>}
+          </p>
+          {meta.length > 0 && <p className="text-xs text-muted">{meta.join(" · ")}</p>}
+        </div>
+        <div className="flex items-center gap-2">
+          <StarRating size="sm" value={rating} onChange={rate} label={t.episodes.rateLabel(ep.number)} />
+          <span className="hidden w-7 text-right font-display text-sm text-accent sm:inline">{rating ? formatRating(rating) : ""}</span>
+        </div>
+      </li>
+    );
+  }
   const still = !failed && ep.still && STILL_PATH.test(ep.still) ? ep.still : null;
   return (
     <li id={`ep-${ep.number}`} className="scroll-mt-20 grid grid-cols-[112px_1fr] gap-3 py-3 sm:grid-cols-[148px_1fr_auto] sm:items-center">

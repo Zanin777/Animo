@@ -75,7 +75,7 @@ export function Poster({ anime, size = "md", className = "" }: Props) {
           src={src}
           alt=""
           fill
-          sizes={xs ? "64px" : "(min-width: 768px) 180px, 33vw"}
+          sizes={xs ? "96px" :"(min-width: 768px) 180px, 33vw"}
           className="z-[2] object-cover"
           onError={() => setFailed(true)}
         />
